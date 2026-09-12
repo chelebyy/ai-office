@@ -11,8 +11,16 @@ import {
   foreground,
   type CharacterId,
 } from './scene-layout.ts';
-import { freshness, latestMessage, lastTool, safeTime, type Connection } from './fixed-state.ts';
+import { freshness, latestMessage, lastTool, safeTime, sessionName, type Connection } from './fixed-state.ts';
 import type { OfficeCopy } from './copy.ts';
+import { LaptopScreen } from './LaptopScreen.tsx';
+import {
+  useChelebyMotion,
+  ChelebyMotionSprite,
+  ChelebyMotionControls,
+  MOTION_CUTOUT,
+  MOTION_BACKGROUND,
+} from './ChelebyMotion.tsx';
 
 export type ArtworkProps = {
   actors: Record<CharacterId, SessionView | undefined>;
@@ -25,13 +33,14 @@ export type ArtworkProps = {
   labels: boolean;
   screens: boolean;
   showCharacters: boolean;
+  motionPreview: boolean;
+  onCloseMotion: () => void;
   onSelect: (id: CharacterId) => void;
 };
 
-export function actorName(id: CharacterId, copy: OfficeCopy) {
-  return id === 'main'
-    ? 'Cheleby'
-    : `${copy.subagent} #${['blue', 'green', 'purple'].indexOf(id) + 1}`;
+export function actorName(id: CharacterId, copy: OfficeCopy, session?: SessionView) {
+  if (id === 'main') return 'Cheleby';
+  return sessionName(session, session ? `${copy.subagent} · ${session.id.slice(-6)}` : copy.preview);
 }
 export function stateLabel(
   session: SessionView | undefined,
@@ -109,6 +118,7 @@ export default function OfficeArtwork(props: ArtworkProps) {
     };
   }, [retry]);
   const { actors, copy, locale, labels, screens, showCharacters } = props;
+  const motion = useChelebyMotion(props.motionPreview && showCharacters, props.paused);
   const position = (x: number, y: number, w: number, h?: number): CSSProperties => ({
     left: `${((x - ART.x) / ART.widthOfRoom) * 100}%`,
     top: `${(y / ART.heightOfRoom) * 100}%`,
@@ -124,6 +134,9 @@ export default function OfficeArtwork(props: ArtworkProps) {
         key={retry}
       >
         <defs>
+          <filter id={`${id}-motion-edge`} x="-10%" y="-10%" width="120%" height="120%">
+            <feGaussianBlur stdDeviation="2" />
+          </filter>
           <mask
             id={`${id}-decor`}
             maskUnits="userSpaceOnUse"
@@ -136,9 +149,35 @@ export default function OfficeArtwork(props: ArtworkProps) {
             {characters.map((c) => (
               <g key={c.id} fill="black">
                 <path d={c.path} />
+                {c.id === 'main' && motion.ready && (
+                  <path d={MOTION_CUTOUT} filter={`url(#${id}-motion-edge)`} />
+                )}
                 <rect x={c.label[0] - 5} y={c.label[1] - 5} width="140" height="78" rx="5" />
               </g>
             ))}
+          </mask>
+          <mask
+            id={`${id}-motion-clear`}
+            maskUnits="userSpaceOnUse"
+            x="0"
+            y="0"
+            width="1536"
+            height="1024"
+          >
+            <path d={characters[0].path} fill="white" />
+            <path d={MOTION_CUTOUT} fill="white" filter={`url(#${id}-motion-edge)`} />
+          </mask>
+          <mask
+            id={`${id}-motion-foreground`}
+            maskUnits="userSpaceOnUse"
+            x="0"
+            y="0"
+            width="1536"
+            height="1024"
+          >
+            <rect width="1536" height="1024" fill="white" />
+            <path d={characters[0].path} fill="black" />
+            <path d={MOTION_CUTOUT} fill="black" filter={`url(#${id}-motion-edge)`} />
           </mask>
           {characters.map((c) => (
             <clipPath key={c.id} id={`${id}-${c.id}`}>
@@ -161,6 +200,17 @@ export default function OfficeArtwork(props: ArtworkProps) {
           onError={() => setFailed(true)}
           data-layer="clean-plate"
         />
+        {motion.ready && (
+          <image
+            href={MOTION_BACKGROUND}
+            x="560"
+            y="460"
+            width="310"
+            height="310"
+            mask={`url(#${id}-motion-clear)`}
+            data-layer="motion-background"
+          />
+        )}
         <image
           href={SOURCE}
           width="1536"
@@ -200,15 +250,27 @@ export default function OfficeArtwork(props: ArtworkProps) {
         </g>
         {showCharacters && (
           <g data-layer="characters">
-            {characters.map((c) => (
-              <image
-                key={c.id}
-                href={SOURCE}
-                width="1536"
-                height="1024"
-                clipPath={`url(#${id}-${c.id})`}
+            {characters
+              .filter((c) => c.id !== 'main' || !motion.ready)
+              .map((c) => (
+                <image
+                  key={c.id}
+                  href={SOURCE}
+                  width="1536"
+                  height="1024"
+                  clipPath={`url(#${id}-${c.id})`}
+                />
+              ))}
+            {motion.ready && <ChelebyMotionSprite motion={motion} />}
+            {motion.ready && screens && (
+              <LaptopScreen
+                mode={motion.mode}
+                session={actors.main}
+                locale={locale}
+                copy={copy}
+                state={stateLabel(actors.main, props)}
               />
-            ))}
+            )}
           </g>
         )}
         <image
@@ -216,13 +278,14 @@ export default function OfficeArtwork(props: ArtworkProps) {
           width="1536"
           height="1024"
           clipPath={`url(#${id}-foreground)`}
+          mask={motion.ready ? `url(#${id}-motion-foreground)` : undefined}
           data-layer="foreground"
         />
       </svg>
       {characters.map((c) => {
         const session = actors[c.id];
         const state = freshness(session, props.connection, props.paused, props.now);
-        const name = actorName(c.id, copy);
+        const name = actorName(c.id, copy, session);
         return (
           <div
             key={c.id}
@@ -245,6 +308,7 @@ export default function OfficeArtwork(props: ArtworkProps) {
                 style={position(c.label[0], c.label[1], 130)}
                 onClick={() => props.onSelect(c.id)}
                 aria-label={`${name} — ${stateLabel(session, props)}`}
+                title={session?.agentTask ? `${name} · ${session.agentTask}` : name}
                 tabIndex={showCharacters ? -1 : 0}
               >
                 <strong>
@@ -260,6 +324,9 @@ export default function OfficeArtwork(props: ArtworkProps) {
           </div>
         );
       })}
+      {props.motionPreview && showCharacters && (
+        <ChelebyMotionControls motion={motion} locale={locale} onClose={props.onCloseMotion} />
+      )}
       {failed && (
         <div className="fo-asset-error" role="alert">
           <p>{copy.assetError}</p>

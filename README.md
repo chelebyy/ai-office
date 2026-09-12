@@ -2,7 +2,7 @@
 
 Codex oturumlarını, kullanıcının seçtiği ofis görüntüsünde **sabit bir kamera açısından** izleme projesi. Güncel yön: referans görselden hazırlanan ofis katmanları, Cheleby'nin masada oturan ofis sürümü, ayrı robotlar, hareketli ekran içerikleri ve gerçek React bilgi panelleri. Serbest gezinme yok; bu aşamada masaüstü hedefleniyor.
 
-**B2 sabit ofis web önizlemesi hazır.** Kaynak ofis, karakter/sandalye kesitleri, perspektif ekranlar ve gerçek React panelleri birlikte çalışıyor. Mevcut yerel gözlemci kullanılıyor; karakter animasyonları B3 aşamasında. [B2 uygulama ve doğrulama kaydı](docs/B2_FIXED_OFFICE_WEB_2026-09-12.md).
+**B2 sabit ofis, B3 Cheleby hareket önizlemesi, canlı laptop ekranı ve gerçek ajan adları hazır.** Kaynak ofis, perspektif ekranlar ve gerçek React panelleri mevcut yerel gözlemciyle çalışıyor. `/?view=office&motion=preview` veya Ayarlar → Cheleby hareket önizlemesi ile bekleme/yazma seçilebilir. Her iki poz gözlüksüzdür; beklerken bize, yazarken laptopa bakar. Yazarken eller sırayla kalkıp klavyeye basar; iki durum aynı referans ölçeğine hizalanır. Yazmada sandalye/gövde sabit, el/önkol katmanı hareketlidir. Laptop gerçek araç olaylarını ve görünür mesajı gösterir; ajan adları metadata üzerinden gelir. Sıradaki adım Cheleby'nin Bekleme/Yazma durumunu gerçek taze olaylara bağlamaktır; robot hareketleri ardından gelir. [B2 kaydı](docs/B2_FIXED_OFFICE_WEB_2026-09-12.md) · [B3 kapsamı ve doğrulama](docs/B3_CHELEBY_MOTION_PREVIEW_2026-09-12.md).
 
 [Güncel görsel karar](docs/FIXED_CAMERA_OFFICE_DECISION_2026-09-12.md) · [Ürün planı](docs/CHELEBY_HOME_PLAN.md) · [Yol haritası](docs/CHELEBY_HOME_ROADMAP.md) · [Bağlantı kabulü](docs/CONNECTION_ACCEPTANCE_2026-09-11.md) · [3D ofis kabulü](docs/OFFICE_PROTOTYPE_2026-09-11.md) · [Performans ve Blender](docs/PERFORMANCE_AND_BLENDER_2026-09-12.md)
 
@@ -10,9 +10,11 @@ Codex oturumlarını, kullanıcının seçtiği ofis görüntüsünde **sabit bi
 
 [Seçilen ofis görseli](docs/concepts/office-concept-v3-mascot.png) ana referanstır. B2'de görüntünün sabit bölümleri korundu; karakter/sandalye kesitleri, ekranlar ve ön örtücü parçalar ayrı katmanlarda çalışıyor. Kurulu Cheleby peti kimlik kaynağıdır ve değiştirilmez.
 
-**B1 v2** [Cheleby masa pozu](docs/concepts/cheleby-office-b1-v2.png) B2'nin kaynak karesidir. Kullanıcı B2'ye geçilmesini istedi. İlk görünüm tarayıcıda karşılaştırıldı; görsel kullanıcı kabulü ve B3 hareketleri açık. [İlk görsel kayıt](docs/B1_CHELEBY_OFFICE_STILL_2026-09-12.md), [güncel karar](docs/FIXED_CAMERA_OFFICE_DECISION_2026-09-12.md).
+**B1 v2** [Cheleby masa pozu](docs/concepts/cheleby-office-b1-v2.png) B2'nin kaynak karesidir. Kullanıcı B2'ye geçilmesini istedi. Tam sayfa yerleşimi kullanıcı tarafından kabul edildi. B3'te gözlüksüz iki poz ve titreşim düzeltmesi hazır; kullanıcı r5 için “şimdi daha iyi” dedi. R6 canlı laptop ve ajan adları Chrome'da doğrulandı; kapsamlı son görsel kabul iddia edilmez. [İlk görsel kayıt](docs/B1_CHELEBY_OFFICE_STILL_2026-09-12.md), [güncel karar](docs/FIXED_CAMERA_OFFICE_DECISION_2026-09-12.md).
 
 `/` ve `/?view=office` yeni sabit ofisi açar. Karaktere tıkla; gerçek oturum ve son görünür asistan mesajı açılır. Sol alttan oturum seçilebilir. Ayarlardan TR/EN/otomatik dil, etiketler, ekranlar ve karakter katmanı değiştirilebilir. Bağlı alt ajanı olmayan masa açıkça atanmadı olarak gösterilir. `/?view=events` gözlemci geçmişi, `/?view=legacy` önceki WebGL ofis, `/?view=blender` ise gösterim hareketleri içeren GLB pilotudur.
+
+Son devam noktası: [kapsamlı oturum devir belgesi](.claude/handoffs/2026-09-12-235834-cheleby-office-motion-live-screens.md).
 
 ## Başlatma
 
@@ -64,7 +66,7 @@ Aşağıdaki kamera, model ve dar ekran davranışları mevcut v0.2 uygulamasın
 - Ekran genişliğini kullanan düzen; dar ekranda alt alta paneller.
 - İlk Türkçe/İngilizce dil dosyaları. Belirgin kullanıcı mesajından dil seçimi; aksi durumda tarayıcı dili ve İngilizce yedek. Dil algılama sezgiseldir, diğer dillerin çevirisi henüz yoktur.
 
-Üstteki **Ofis / Olaylar** düğmeleri aynı yerel gözlemcinin iki görünümünü açar. Soldan bir oturum seçildiğinde tek oda örneği o oturumun verisiyle güncellenir; henüz çok odalı bir bina gösterilmez. Sahne üç alt ajan masasını gösterebilir; ekip sayacı daha geniş ekibi sayabilir, tüm kayıtlar Olaylar görünümünden incelenir. Bu v0.2 model ve animasyonları kodla üretilmiştir. Ayrı Blender/GLB pilotu korunur. Yeni B2 görünümü yukarıda açıklanan ayrı rotadır; B1 v2 karesinin katmanlarını kullanır, hareket atlası henüz yoktur. Tam 3D iskelet, yürüme ve oturup kalkma güncel görsel teslimin ön koşulu değildir.
+Üstteki **Ofis / Olaylar** düğmeleri aynı yerel gözlemcinin iki görünümünü açar. Soldan bir oturum seçildiğinde tek oda örneği o oturumun verisiyle güncellenir; henüz çok odalı bir bina gösterilmez. Sahne üç alt ajan masasını gösterebilir; ekip sayacı daha geniş ekibi sayabilir, tüm kayıtlar Olaylar görünümünden incelenir. Bu v0.2 model ve animasyonları kodla üretilmiştir. Ayrı Blender/GLB pilotu korunur. Yeni B2 görünümü yukarıda açıklanan ayrı rotadır; B1 v2 karesinin katmanlarını kullanır; isteğe bağlı B3 önizlemesinde Cheleby için ayrı bekleme/yazma atlasları vardır. Tam 3D iskelet, yürüme ve oturup kalkma güncel görsel teslimin ön koşulu değildir.
 
 ## Veri sınırları
 
@@ -82,7 +84,7 @@ Geçmiş şu an bellektedir. Gözlemci yeniden başlayınca mevcut dosya pencere
 npm run check
 ```
 
-Bu komut tip kontrolünü, 32 davranış testini ve web derlemesini çalıştırır. Testler proje içindeki geçici örneklerle çalışır; gerçek Codex kayıtlarına yazmaz. Kamera, karakter seçimi, WebGL yeniden açma ve ekran boyutları ayrıca Windows/Chromium üzerinde denendi; diğer cihaz ve tarayıcılar için sonuç çıkarılmaz.
+Bu komut tip kontrolünü, 37 davranış testini ve web derlemesini çalıştırır. Testler proje içindeki geçici örneklerle çalışır; gerçek Codex kayıtlarına yazmaz. Kamera, karakter seçimi, WebGL yeniden açma ve ekran boyutları ayrıca Windows/Chromium üzerinde denendi; diğer cihaz ve tarayıcılar için sonuç çıkarılmaz.
 
 | Konum | Sorumluluk |
 | --- | --- |

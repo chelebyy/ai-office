@@ -26,6 +26,9 @@ export interface SessionView {
   parentResolved: boolean;
   source: Source;
   agentKind: AgentKind;
+  /** Explicit public identity from session metadata; older records may omit it. */
+  agentName?: string | null;
+  agentTask?: string | null;
   project: string;
   version: string;
   status: SessionStatus;

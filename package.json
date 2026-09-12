@@ -12,7 +12,7 @@
     "start": "tsx src/observer/main.ts",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write src test vite.config.ts",
-    "test": "node --import tsx --test test/parser.test.ts test/reader.test.ts test/server.test.ts test/office-state.test.ts test/frame-scheduler.test.ts test/fixed-office-state.test.ts",
+    "test": "node --import tsx --test test/parser.test.ts test/reader.test.ts test/server.test.ts test/office-state.test.ts test/frame-scheduler.test.ts test/fixed-office-state.test.ts test/agent-identity.test.ts",
     "check": "npm run typecheck && npm test && vite build"
   },
   "dependencies": {

@@ -59,6 +59,10 @@ export function fixedOfficeState(snapshot: ObserverSnapshot | null, selectedId: 
   );
   return { root, mains, team, actors, members, events, counts };
 }
+export function sessionName(session: SessionView | undefined, fallback: string) {
+  if (session?.agentKind === 'main') return 'Cheleby';
+  return session?.agentName?.trim() || session?.agentTask?.trim() || fallback;
+}
 export function latestMessage(session?: SessionView) {
   return session?.events.findLast((e) => e.kind === 'assistant_message' && e.text)?.text;
 }

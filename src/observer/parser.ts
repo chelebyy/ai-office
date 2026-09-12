@@ -60,6 +60,10 @@ export class RecordReducer {
       const startedAt = validTime(data.timestamp ?? row.timestamp, observedAt);
       this.session = {
         id, parentId, rootId: parentId ?? id, parentResolved: !parentId, source, agentKind,
+        agentName: agentKind === 'subagent' ? publicText(data.agent_nickname, 80).trim() || null : null,
+        agentTask: agentKind === 'subagent'
+          ? publicText(string(data.agent_path).split('/').filter(Boolean).at(-1), 100).trim() || null
+          : null,
         project: publicText(string(data.cwd).replace(/[\\/]+$/, '').split(/[\\/]/).pop() || '—', 100),
         version: publicText(data.cli_version, 40) || 'unknown',
         status: 'unknown', locale: null, localeEvidence: 'none', startedAt,

@@ -11,6 +11,7 @@ import {
   latestMessage,
   remember,
   safeTime,
+  sessionName,
   stored,
   toolEvents,
 } from './fixed-state.ts';
@@ -33,6 +34,9 @@ export default function FixedOfficeApp() {
   const [labels, setLabels] = useState(true);
   const [screens, setScreens] = useState(true);
   const [showCharacters, setShowCharacters] = useState(true);
+  const [motionPreview, setMotionPreview] = useState(
+    () => new URLSearchParams(window.location.search).get('motion') === 'preview',
+  );
   const [search, setSearch] = useState('');
   const [source, setSource] = useState<Source | 'all'>('all');
   const [activityFilter, setActivityFilter] = useState('all');
@@ -53,10 +57,8 @@ export default function FixedOfficeApp() {
       ? office.actors[actor]
       : selected;
   const detailName = actor
-    ? actorName(actor, copy)
-    : detail?.agentKind === 'main'
-      ? 'Cheleby'
-      : copy.subagent;
+    ? actorName(actor, copy, detail)
+    : sessionName(detail, copy.subagent);
   const detailsId = detail?.id ?? '';
   const activity = office.events
     .filter(({ session }) => activityFilter === 'all' || session.id === activityFilter)
@@ -121,9 +123,7 @@ export default function FixedOfficeApp() {
     return s === 'desktop' ? copy.desktop : s === 'cli' ? copy.cli : copy.unknown;
   }
   function memberName(s: SessionView) {
-    return s.agentKind === 'main'
-      ? 'Cheleby'
-      : `${copy.subagent} #${office.team.findIndex((m) => m.id === s.id) + 1}`;
+    return sessionName(s, `${copy.subagent} · ${s.id.slice(-6)}`);
   }
   function eventText(e: SessionView['events'][number]) {
     return `${eventLabels[locale][e.kind]}${e.toolName ? ` · ${e.toolName}` : ''}${e.outcome === 'error' ? ' · error' : ''}`;
@@ -228,6 +228,8 @@ export default function FixedOfficeApp() {
           labels={labels}
           screens={screens}
           showCharacters={showCharacters}
+          motionPreview={motionPreview}
+          onCloseMotion={() => setMotionPreview(false)}
           onSelect={chooseActor}
         />
         {(snapshot?.scan.status === 'source_missing' || snapshot?.scan.status === 'error') && (
@@ -298,7 +300,7 @@ export default function FixedOfficeApp() {
                       <Icon name={c.id === 'main' ? 'terminal' : 'agents'} />
                     </span>
                     <span>
-                      <strong>{actorName(c.id, copy)}</strong>
+                      <strong title={s?.agentTask ?? undefined}>{actorName(c.id, copy, s)}</strong>
                       <small>{stateLabel(s, stateProps)}</small>
                     </span>
                     <i
@@ -588,6 +590,14 @@ export default function FixedOfficeApp() {
                   type="checkbox"
                   checked={showCharacters}
                   onChange={(e) => setShowCharacters(e.target.checked)}
+                />
+              </label>
+              <label className="fo-setting">
+                {locale === 'tr' ? 'Cheleby hareket önizlemesi' : 'Cheleby motion preview'}
+                <input
+                  type="checkbox"
+                  checked={motionPreview}
+                  onChange={(e) => setMotionPreview(e.target.checked)}
                 />
               </label>
               <div className="fo-prototype-links">
