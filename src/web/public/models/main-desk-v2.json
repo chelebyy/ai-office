@@ -1,0 +1,20 @@
+{
+  "source": "cheleby-sunset-office-v2.blend",
+  "sourceGeometryObjects": 356,
+  "exportMeshes": 37,
+  "materials": 29,
+  "bakedTextures": [
+    "static_fabric_basecolor",
+    "static_walnut_basecolor",
+    "static_oak_basecolor"
+  ],
+  "bytes": 20573620,
+  "triangles": 482110,
+  "parts": [
+    "static",
+    "head",
+    "hand_left",
+    "hand_right"
+  ],
+  "liveData": false
+}
