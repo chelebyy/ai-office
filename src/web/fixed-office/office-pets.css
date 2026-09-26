@@ -1,0 +1,91 @@
+.fo-pets {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+.fo-pet-position {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 11.277533cqw; /* 128 source pixels */
+  aspect-ratio: 1;
+  transform-origin: 50% 88%;
+  will-change: transform;
+}
+.fo-pet-facing,
+.fo-pet-body,
+.fo-pet-sprite {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 88%;
+}
+.fo-pet-sprite {
+  background-size: 400% 400%;
+  background-repeat: no-repeat;
+}
+.fo-pet-shadow {
+  position: absolute;
+  left: 18%;
+  bottom: 9%;
+  width: 68%;
+  height: 10%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #160d09a0, #160d0900 70%);
+}
+.fo-pet-floor[data-action='jump'] {
+  opacity: 0.5;
+}
+.fo-pet-bowl {
+  position: absolute;
+  overflow: visible;
+  transform: translate(-50%, -70%);
+}
+.fo-artwork[data-theme='night'] .fo-pet-rig-part,
+.fo-artwork[data-theme='night'] .fo-pet-sprite,
+.fo-artwork[data-theme='night'] .fo-pet-bowl {
+  filter: brightness(0.79) saturate(0.92);
+}
+.fo-artwork[data-theme='day'] .fo-pet-rig-part,
+.fo-artwork[data-theme='day'] .fo-pet-sprite,
+.fo-artwork[data-theme='day'] .fo-pet-bowl {
+  filter: brightness(1.08) saturate(0.88);
+}
+.fo-pet-preview {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  padding: 6px 10px;
+  border-radius: 5px;
+  color: #c9ddd9;
+  background: #102027dd;
+  font-size: 11px;
+}
+
+.fo-pet-rig {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 256px;
+  height: 256px;
+  transform: scale(calc(11.277533cqw / 256px));
+  transform-origin: 0 0;
+  contain: layout style;
+}
+.fo-pet-rig-part {
+  position: absolute;
+  background-repeat: no-repeat;
+}
+.fo-pet-rig [data-joint],
+.fo-pet-rig [data-rig-torso] {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+.fo-pet-rig-far {
+  opacity: 0.82;
+}

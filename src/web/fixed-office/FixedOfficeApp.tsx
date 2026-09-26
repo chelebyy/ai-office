@@ -1,35 +1,45 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import type { Locale, SessionView, Source } from '../../shared/contract.ts';
+import type { SessionView, Source } from '../../shared/contract.ts';
 import { useObserver } from '../use-observer.ts';
-import { browserLocale, eventLabels } from '../i18n.ts';
+import { useLanguage } from '../use-language.ts';
+import { useOfficeTheme } from './use-office-theme.ts';
+import { useOfficeWeather } from './use-office-weather.ts';
+import { WeatherSettings } from './OfficeWeather.tsx';
+import { LocationSetup, locationTitle } from './LocationSetup.tsx';
 import OfficeArtwork, { actorName, stateLabel } from './OfficeArtwork.tsx';
-import { characters, CLEAN_PLATE, type CharacterId } from './scene-layout.ts';
+import { characters, type CharacterId } from './scene-layout.ts';
 import {
   fixedOfficeState,
   freshness,
-  lastTool,
   latestMessage,
   remember,
   safeTime,
   sessionName,
   stored,
-  toolEvents,
 } from './fixed-state.ts';
+import { WallFeed } from './WallFeed.tsx';
+import { activityLabel } from './activity-labels.ts';
 import { fixedCopy } from './copy.ts';
+import { ProjectNavigator } from './ProjectNavigator.tsx';
+import { OfficePower, officePowerLabel } from './OfficePower.tsx';
+import { officeRooms } from './office-rooms.ts';
+import { RoomIdentitySettings } from './RoomIdentity.tsx';
+import { roomAccentKey } from './room-accent.ts';
 import { Icon, type IconName } from './Icon.tsx';
 import './fixed-office.css';
 
 type Dialog = {
-  kind: 'sessions' | 'actor' | 'tasks' | 'settings' | 'scope';
+  kind: 'sessions' | 'actor' | 'tasks' | 'settings' | 'scope' | 'feed' | 'location' | 'identity';
   actor?: CharacterId;
   sessionId?: string;
 } | null;
 
 export default function FixedOfficeApp() {
-  const [paused, setPaused] = useState(false);
-  const { snapshot, connection } = useObserver(paused);
+  const [viewPaused, setPaused] = useState(false);
+  const { snapshot, transportConnection: connection, runtime } = useObserver(viewPaused);
+  const runtimePaused = Boolean(runtime && runtime.state !== 'running');
+  const paused = viewPaused || runtimePaused;
   const [selectedId, setSelectedId] = useState(() => stored('cheleby.selected', ''));
-  const [language, setLanguage] = useState(() => stored('cheleby.office.language', 'auto'));
   const [dialog, setDialog] = useState<Dialog>(null);
   const [labels, setLabels] = useState(true);
   const [screens, setScreens] = useState(true);
@@ -37,41 +47,61 @@ export default function FixedOfficeApp() {
   const [motionPreview, setMotionPreview] = useState(
     () => new URLSearchParams(window.location.search).get('motion') === 'preview',
   );
-  const [search, setSearch] = useState('');
-  const [source, setSource] = useState<Source | 'all'>('all');
-  const [activityFilter, setActivityFilter] = useState('all');
+  const [robotMotionPreview, setRobotMotionPreview] = useState(
+    () => new URLSearchParams(window.location.search).get('robotMotion') === 'preview',
+  );
+  const [mobilePanel, setMobilePanel] = useState<'feed' | 'agents'>('feed');
+  const teamRef = useRef<HTMLElement>(null);
   const [now, setNow] = useState(() => Date.now());
   const dialogRef = useRef<HTMLDialogElement>(null);
   const consoleRef = useRef<HTMLElement>(null);
-  const statsRef = useRef<HTMLElement>(null);
   const office = fixedOfficeState(snapshot, selectedId);
-  const locale: Locale =
-    language === 'tr' || language === 'en' ? language : (office.root?.locale ?? browserLocale());
+  const {
+    locale,
+    preference: language,
+    setPreference: setLanguage,
+  } = useLanguage(office.root?.locale);
   const copy = fixedCopy[locale];
+  const { theme, preference, location, setupDone, dawn, setTheme, saveLocation, skipSetup } =
+    useOfficeTheme(now);
+  const weather = useOfficeWeather(location, now);
+  useEffect(() => {
+    if (!setupDone) setDialog((current) => current ?? { kind: 'location' });
+  }, [setupDone]);
+  function closeDialog() {
+    if (dialog?.kind === 'location' && !setupDone) skipSetup();
+    setDialog(null);
+  }
   const selected = office.members.find((s) => s.id === selectedId) ?? office.root;
   const stateProps = { copy, connection, paused, now };
+  const hasWorkingRoom = officeRooms(snapshot, connection, paused, now).some(
+    (room) => room.state === 'working' || room.state === 'waiting',
+  );
+  const runtimeLabel =
+    runtimePaused && runtime && connection === 'connected'
+      ? officePowerLabel(locale, runtime.state)
+      : null;
+  const roomIndicatorLabel =
+    runtimeLabel ??
+    (paused
+      ? copy.paused
+      : connection !== 'connected'
+        ? copy[connection === 'connecting' ? 'connecting' : 'offline']
+        : hasWorkingRoom
+          ? copy.roomActive
+          : copy.roomInactive);
   const actor = dialog?.actor;
   const detail = dialog?.sessionId
     ? office.members.find((s) => s.id === dialog.sessionId)
     : actor
       ? office.actors[actor]
       : selected;
-  const detailName = actor
-    ? actorName(actor, copy, detail)
-    : sessionName(detail, copy.subagent);
+  const detailName = actor ? actorName(actor, copy, detail) : sessionName(detail, copy.subagent);
   const detailsId = detail?.id ?? '';
-  const activity = office.events
-    .filter(({ session }) => activityFilter === 'all' || session.id === activityFilter)
-    .slice(0, 10);
-  const candidates = office.mains.filter(
-    (s) =>
-      (source === 'all' || s.source === source) &&
-      `${s.project} ${s.id}`.toLocaleLowerCase(locale).includes(search.toLocaleLowerCase(locale)),
-  );
 
   useEffect(() => {
     document.documentElement.lang = locale;
-    document.title = 'Cheleby · Codex AI Office';
+    document.title = 'AI Office';
   }, [locale]);
   useEffect(() => {
     const tick = () => {
@@ -94,9 +124,14 @@ export default function FixedOfficeApp() {
       if (previous instanceof HTMLElement && previous.isConnected) previous.focus();
     };
   }, [dialog]);
+
   useEffect(() => {
-    setActivityFilter('all');
-  }, [office.root?.id]);
+    // Lock the first resolved room instead of following the most recent event.
+    if (!selectedId && office.root) {
+      setSelectedId(office.root.id);
+      remember('cheleby.selected', office.root.id);
+    }
+  }, [selectedId, office.root?.id]);
 
   function chooseSession(s: SessionView) {
     setSelectedId(s.id);
@@ -125,34 +160,39 @@ export default function FixedOfficeApp() {
   function memberName(s: SessionView) {
     return sessionName(s, `${copy.subagent} · ${s.id.slice(-6)}`);
   }
-  function eventText(e: SessionView['events'][number]) {
-    return `${eventLabels[locale][e.kind]}${e.toolName ? ` · ${e.toolName}` : ''}${e.outcome === 'error' ? ' · error' : ''}`;
-  }
   const nav: { key: string; label: string; icon: IconName; action?: () => void }[] = [
-    { key: 'live', label: copy.office, icon: 'live', action: () => setDialog(null) },
+    {
+      key: 'live',
+      label: copy.office,
+      icon: 'live',
+      action: () => {
+        setMobilePanel('feed');
+        requestAnimationFrame(() => focusPanel(consoleRef));
+      },
+    },
     {
       key: 'agents',
       label: copy.agents,
       icon: 'agents',
-      action: () => setDialog({ kind: 'sessions' }),
+      action: () => {
+        setMobilePanel('agents');
+        requestAnimationFrame(() => focusPanel(teamRef));
+      },
     },
     { key: 'tasks', label: copy.tasks, icon: 'tasks', action: () => setDialog({ kind: 'tasks' }) },
     {
       key: 'terminal',
       label: copy.terminal,
       icon: 'terminal',
-      action: () => focusPanel(consoleRef),
+      action: () => history(selected?.id),
     },
-    { key: 'files', label: copy.files, icon: 'files', action: () => setDialog({ kind: 'scope' }) },
-    { key: 'git', label: copy.git, icon: 'git', action: () => setDialog({ kind: 'scope' }) },
-    { key: 'deploy', label: copy.deploy, icon: 'deploy' },
     {
-      key: 'analytics',
-      label: copy.analytics,
-      icon: 'analytics',
-      action: () => focusPanel(statsRef),
+      key: 'projects',
+      label: copy.projects,
+      icon: 'files',
+      action: () => setDialog({ kind: 'sessions' }),
     },
-    { key: 'replay', label: copy.replay, icon: 'replay' },
+    { key: 'git', label: copy.git, icon: 'git', action: () => setDialog({ kind: 'scope' }) },
     {
       key: 'settings',
       label: copy.settings,
@@ -169,12 +209,19 @@ export default function FixedOfficeApp() {
 
   return (
     <div className="fixed-office">
-      <a className="fo-skip" href="#office-console">
-        {copy.terminal}
+      <a
+        className="fo-skip"
+        href="#office-console"
+        onClick={() => {
+          setMobilePanel('feed');
+          requestAnimationFrame(() => focusPanel(consoleRef));
+        }}
+      >
+        {copy.office}
       </a>
-      <aside className="fo-sidebar" aria-label="Codex">
+      <aside className="fo-sidebar" aria-label="AI Office">
         <div className="fo-brand">
-          CODEX<span>AI OFFICE</span>
+          AI<span>OFFICE</span>
         </div>
         <nav>
           {nav.map((n) => (
@@ -204,20 +251,44 @@ export default function FixedOfficeApp() {
           </button>
           <p className={`fo-connection fo-${connection}`} role="status">
             <span className="fo-dot" />
-            {paused ? copy.paused : copy[connection]}
+            {connection !== 'connected'
+              ? copy[connection]
+              : (runtimeLabel ?? (paused ? copy.paused : copy[connection]))}
           </p>
           <p>
             <Icon name="agents" size={13} />
             {office.members.length} {copy.team.toLocaleLowerCase(locale)}
           </p>
-          <button className="fo-text-button" onClick={() => setPaused((p) => !p)}>
+          <button
+            className="fo-text-button"
+            disabled={runtimePaused}
+            onClick={() => setPaused((p) => !p)}
+          >
             <Icon name={paused ? 'play' : 'pause'} size={13} />
             {paused ? copy.resume : copy.pause}
           </button>
         </div>
       </aside>
       <main className="fo-workspace" aria-label={copy.office}>
+        <header className="fo-workspace-toolbar">
+          <button className="fo-room-picker" onClick={() => setDialog({ kind: 'sessions' })}>
+            <Icon name="layers" />
+            <span>{office.root?.project ?? copy.selectSession}</span>
+            <Icon name="chevron" size={14} />
+          </button>
+          <div className="fo-toolbar-actions">
+            <button className="fo-expand-feed" onClick={() => setDialog({ kind: 'feed' })}>
+              <Icon name="external" size={16} />
+              {locale === 'tr' ? 'Akışı büyüt' : 'Expand feed'}
+            </button>
+            <OfficePower locale={locale} />
+          </div>
+        </header>
         <OfficeArtwork
+          weather={weather}
+          location={location}
+          onOpenWeather={() => setDialog({ kind: location ? 'settings' : 'location' })}
+          theme={theme}
           actors={office.actors}
           activeId={selected?.id}
           locale={locale}
@@ -229,55 +300,66 @@ export default function FixedOfficeApp() {
           screens={screens}
           showCharacters={showCharacters}
           motionPreview={motionPreview}
+          robotMotionPreview={robotMotionPreview}
+          onCloseRobotMotion={() => setRobotMotionPreview(false)}
           onCloseMotion={() => setMotionPreview(false)}
           onSelect={chooseActor}
+          onCustomize={() => setDialog({ kind: 'identity' })}
         />
         {(snapshot?.scan.status === 'source_missing' || snapshot?.scan.status === 'error') && (
           <div className="fo-source-banner" role="alert">
             {snapshot.scan.status === 'error' ? copy.scanError : copy.sourceMissing}
           </div>
         )}
-        <div className="fo-bottom-grid">
+        <div
+          className="fo-panel-tabs"
+          aria-label={locale === 'tr' ? 'Görünüm seçimi' : 'Choose view'}
+        >
+          <button
+            aria-pressed={mobilePanel === 'feed'}
+            aria-controls="office-console"
+            onClick={() => setMobilePanel('feed')}
+          >
+            {copy.office}
+          </button>
+          <button
+            aria-pressed={mobilePanel === 'agents'}
+            aria-controls="office-team"
+            onClick={() => setMobilePanel('agents')}
+          >
+            {copy.agents} · {office.members.length}
+          </button>
+        </div>
+        <div className="fo-bottom-grid" data-mobile-panel={mobilePanel}>
           <section
             className="fo-panel fo-console"
             id="office-console"
             ref={consoleRef}
             tabIndex={-1}
-            aria-label={copy.terminal}
+            aria-label={copy.office}
           >
-            <PanelHeader
-              title={`${copy.terminal} (${selected ? memberName(selected) : copy.main})`}
-            >
-              <button onClick={() => history(selected?.id)} aria-label={copy.openEvents}>
-                <Icon name="external" size={13} />
+            <PanelHeader title={copy.office}>
+              <button
+                onClick={() => setDialog({ kind: 'feed' })}
+                aria-label={locale === 'tr' ? 'Akışı büyüt' : 'Expand feed'}
+              >
+                <Icon name="external" size={16} />
               </button>
             </PanelHeader>
-            <div className="fo-console-lines">
-              {selected && toolEvents(selected.events).length ? (
-                toolEvents(selected.events).map((e) => (
-                  <p
-                    key={e.id}
-                    className={
-                      e.outcome === 'error'
-                        ? 'fo-error'
-                        : e.outcome === 'success'
-                          ? 'fo-success'
-                          : ''
-                    }
-                  >
-                    <time>{safeTime(e.occurredAt, locale)}</time>
-                    <span>
-                      {e.kind === 'tool_completed' ? '←' : '›'} {eventText(e)}
-                    </span>
-                  </p>
-                ))
-              ) : (
-                <Empty icon="terminal">{copy.emptyConsole}</Empty>
-              )}
-            </div>
-            <footer>{selected ? stateLabel(selected, stateProps) : copy.noLive}</footer>
+            <WallFeed
+              expanded
+              session={office.root}
+              locale={locale}
+              state={stateLabel(office.root, stateProps)}
+            />
           </section>
-          <section className="fo-panel fo-team" aria-label={copy.agents}>
+          <section
+            className="fo-panel fo-team"
+            id="office-team"
+            ref={teamRef}
+            tabIndex={-1}
+            aria-label={copy.agents}
+          >
             <PanelHeader title={copy.agents}>
               <button
                 onClick={() => setDialog({ kind: 'sessions' })}
@@ -301,7 +383,7 @@ export default function FixedOfficeApp() {
                     </span>
                     <span>
                       <strong title={s?.agentTask ?? undefined}>{actorName(c.id, copy, s)}</strong>
-                      <small>{stateLabel(s, stateProps)}</small>
+                      {s && <small>{stateLabel(s, stateProps)}</small>}
                     </span>
                     <i
                       className={`fo-state-dot fo-fresh-${freshness(s, connection, paused, now)}`}
@@ -317,60 +399,35 @@ export default function FixedOfficeApp() {
             </div>
             <footer>{copy.readOnly}</footer>
           </section>
-          <section className="fo-panel fo-files" aria-label={copy.files}>
-            <PanelHeader title={copy.files}>
-              <button onClick={() => setDialog({ kind: 'scope' })} aria-label={copy.scope}>
-                <Icon name="external" size={13} />
-              </button>
-            </PanelHeader>
-            <div className="fo-file-columns">
-              <span>{copy.record}</span>
-              <span>{copy.status}</span>
-            </div>
-            <Empty icon="files">{copy.fileNote}</Empty>
-            <button className="fo-panel-link" onClick={() => setDialog({ kind: 'scope' })}>
-              {copy.scope} →
-            </button>
-          </section>
         </div>
       </main>
-      <aside className="fo-right" aria-label={copy.activity}>
-        <section className="fo-panel fo-activity">
-          <PanelHeader title={copy.activity}>
-            <select
-              aria-label={copy.allAgents}
-              value={activityFilter}
-              onChange={(e) => setActivityFilter(e.target.value)}
+      <aside className="fo-right" aria-label={copy.projects}>
+        <section className="fo-panel fo-projects" tabIndex={-1} aria-label={copy.projects}>
+          <PanelHeader title={copy.projects}>
+            <span
+              className="fo-room-indicator"
+              data-active={hasWorkingRoom}
+              role="status"
+              aria-label={roomIndicatorLabel}
             >
-              <option value="all">{copy.allAgents}</option>
-              {office.members.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {memberName(s)}
-                </option>
-              ))}
-            </select>
+              <i aria-hidden="true" />
+              {roomIndicatorLabel}
+            </span>
+            <button onClick={() => setDialog({ kind: 'sessions' })} aria-label={copy.allSessions}>
+              <Icon name="external" size={13} />
+            </button>
           </PanelHeader>
-          <div className="fo-activity-list">
-            {activity.length ? (
-              activity.map(({ session, event }) => (
-                <button
-                  key={`${session.id}-${event.id}`}
-                  onClick={() => setDialog({ kind: 'actor', sessionId: session.id })}
-                >
-                  <i className={`fo-event-dot fo-event-${event.kind}`} />
-                  <time>{safeTime(event.occurredAt, locale).slice(0, 5)}</time>
-                  <span>
-                    <b>{memberName(session)}</b>
-                    <span title={eventText(event)}>{eventText(event)}</span>
-                  </span>
-                </button>
-              ))
-            ) : (
-              <Empty icon="clock">{copy.noEvents}</Empty>
-            )}
-          </div>
+          <ProjectNavigator
+            snapshot={snapshot}
+            selectedRootId={office.root?.id}
+            {...stateProps}
+            onSelect={chooseSession}
+          />
+          <button className="fo-panel-link" onClick={() => setDialog({ kind: 'sessions' })}>
+            {copy.allSessions} →
+          </button>
         </section>
-        <section className="fo-panel fo-stats" ref={statsRef} tabIndex={-1} aria-label={copy.stats}>
+        <section className="fo-panel fo-stats" tabIndex={-1} aria-label={copy.stats}>
           <PanelHeader title={copy.stats}>
             <button onClick={() => setDialog({ kind: 'scope' })} aria-label={copy.scope}>
               <Icon name="chevron" size={13} />
@@ -391,88 +448,94 @@ export default function FixedOfficeApp() {
           ))}
           <p className="fo-stat-note">{copy.readWindow}</p>
         </section>
-        <section className="fo-panel fo-camera">
-          <PanelHeader title={copy.staticView} />
-          <div className="fo-camera-preview">
-            <svg viewBox="150 0 1135 757" aria-hidden="true">
-              <image href={CLEAN_PLATE} width="1536" height="1024" />
-            </svg>
-            <div />
-          </div>
-          <p>{copy.cameraNote}</p>
-        </section>
       </aside>
       <dialog
         ref={dialogRef}
-        className="fo-dialog"
-        onCancel={() => setDialog(null)}
+        className={`fo-dialog${dialog?.kind === 'feed' ? ' fo-feed-dialog' : ''}`}
+        onCancel={closeDialog}
+        onKeyDown={(event) => {
+          if (event.key !== 'Tab') return;
+          const elements = Array.from(
+            event.currentTarget.querySelectorAll<HTMLElement>(
+              'button, a[href], input, select, textarea, summary, [tabindex]',
+            ),
+          ).filter(
+            (element) =>
+              element.tabIndex >= 0 &&
+              !element.matches(':disabled') &&
+              element.getClientRects().length,
+          );
+          const first = elements[0];
+          const last = elements.at(-1);
+          if (!first || !last) return;
+          if (
+            event.shiftKey &&
+            (document.activeElement === first ||
+              !elements.includes(document.activeElement as HTMLElement))
+          ) {
+            event.preventDefault();
+            last.focus();
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+          }
+        }}
         onClick={(e) => {
-          if (e.target === e.currentTarget) setDialog(null);
+          if (e.target === e.currentTarget) closeDialog();
         }}
         aria-labelledby="fo-dialog-title"
       >
         <div className="fo-dialog-content">
           <header>
-            <span className="fo-eyebrow">CODEX / AI OFFICE</span>
-            <button onClick={() => setDialog(null)} aria-label={copy.close}>
+            <span className="fo-eyebrow">CHELEBY HOME</span>
+            <button onClick={closeDialog} aria-label={copy.close}>
               <Icon name="close" />
             </button>
             <h2 id="fo-dialog-title">
-              {dialog?.kind === 'sessions'
-                ? copy.selectSession
-                : dialog?.kind === 'settings'
-                  ? copy.settings
-                  : dialog?.kind === 'scope'
-                    ? copy.scope
-                    : dialog?.kind === 'tasks'
-                      ? copy.tasks
-                      : detailName}
+              {dialog?.kind === 'identity'
+                ? locale === 'tr'
+                  ? 'Odayı kişiselleştir'
+                  : 'Personalize room'
+                : dialog?.kind === 'location'
+                  ? locationTitle(locale)
+                  : dialog?.kind === 'feed'
+                    ? locale === 'tr'
+                      ? 'Canlı akış'
+                      : 'Live feed'
+                    : dialog?.kind === 'sessions'
+                      ? copy.selectSession
+                      : dialog?.kind === 'settings'
+                        ? copy.settings
+                        : dialog?.kind === 'scope'
+                          ? copy.scope
+                          : dialog?.kind === 'tasks'
+                            ? copy.tasks
+                            : detailName}
             </h2>
           </header>
+          {dialog?.kind === 'identity' && office.root && (
+            <RoomIdentitySettings
+              key={roomAccentKey(office.root)}
+              project={office.root}
+              locale={locale}
+            />
+          )}
+          {dialog?.kind === 'feed' && (
+            <WallFeed
+              expanded
+              session={office.root}
+              locale={locale}
+              state={stateLabel(office.root, stateProps)}
+            />
+          )}
           {dialog?.kind === 'sessions' && (
-            <>
-              <div className="fo-session-filters">
-                <label>
-                  <Icon name="search" />
-                  <input
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder={copy.search}
-                    aria-label={copy.search}
-                  />
-                </label>
-                <select
-                  aria-label={copy.source}
-                  value={source}
-                  onChange={(e) => setSource(e.target.value as Source | 'all')}
-                >
-                  <option value="all">{copy.allSources}</option>
-                  {(['desktop', 'cli', 'unknown'] as const).map((s) => (
-                    <option key={s} value={s}>
-                      {sourceName(s)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="fo-session-list">
-                {candidates.length ? (
-                  candidates.map((s) => (
-                    <button key={s.id} onClick={() => chooseSession(s)}>
-                      <strong>{s.project}</strong>
-                      <small>
-                        {sourceName(s.source)} · {safeTime(s.lastEventAt, locale)} ·{' '}
-                        {stateLabel(s, stateProps)}
-                      </small>
-                      <code>{s.id}</code>
-                    </button>
-                  ))
-                ) : (
-                  <Empty icon="agents">
-                    {office.mains.length ? copy.noMatch : copy.noSessions}
-                  </Empty>
-                )}
-              </div>
-            </>
+            <ProjectNavigator
+              snapshot={snapshot}
+              selectedRootId={office.root?.id}
+              {...stateProps}
+              onSelect={chooseSession}
+              expandedView
+            />
           )}
           {dialog?.kind === 'actor' && (
             <>
@@ -492,7 +555,7 @@ export default function FixedOfficeApp() {
                     <dt>{copy.updated}</dt>
                     <dd>{safeTime(detail.lastEventAt, locale)}</dd>
                     <dt>{copy.tools}</dt>
-                    <dd>{lastTool(detail) ?? copy.noTool}</dd>
+                    <dd>{activityLabel(detail, locale)}</dd>
                   </dl>
                   <h3>{copy.observedTask}</h3>
                   <p className="fo-muted">{copy.taskNote}</p>
@@ -533,6 +596,15 @@ export default function FixedOfficeApp() {
           {dialog?.kind === 'scope' && (
             <>
               <p>{copy.scopeNote}</p>
+              <dl>
+                {counters.map((c) => (
+                  <div className="fo-scope-count" key={c.name}>
+                    <dt>{c.name}</dt>
+                    <dd>{snapshot ? c.value : '—'}</dd>
+                  </div>
+                ))}
+              </dl>
+              <p className="fo-muted">{copy.cameraNote}</p>
               <p>{copy.fileNote}</p>
               <dl>
                 <dt>{copy.source}</dt>
@@ -545,27 +617,91 @@ export default function FixedOfficeApp() {
                 <dd>{copy[connection]}</dd>
               </dl>
               <p className="fo-muted">
-                {copy.readWindow} {copy.partialNote}
+                {copy.readWindow} {copy.partialNote} {copy.discoveryNote}
               </p>
             </>
           )}
+          {dialog?.kind === 'location' && (
+            <LocationSetup
+              key={location?.id ?? 'new'}
+              locale={locale}
+              location={location}
+              firstRun={!setupDone}
+              onSave={(city) => {
+                saveLocation(city);
+                setDialog(null);
+              }}
+              onCancel={closeDialog}
+            />
+          )}
           {dialog?.kind === 'settings' && (
             <>
+              {office.root && (
+                <button
+                  className="fo-room-customize"
+                  onClick={() => setDialog({ kind: 'identity' })}
+                >
+                  {locale === 'tr' ? 'Odayı kişiselleştir' : 'Personalize room'} ·{' '}
+                  {office.root.project}
+                </button>
+              )}
               <h3>{copy.preferences}</h3>
               <label className="fo-setting">
                 {copy.language}
                 <select
                   value={language}
-                  onChange={(e) => {
-                    setLanguage(e.target.value);
-                    remember('cheleby.office.language', e.target.value);
-                  }}
+                  aria-describedby="office-language-help"
+                  onChange={(e) => setLanguage(e.target.value)}
                 >
                   <option value="auto">{copy.automatic}</option>
                   <option value="tr">Türkçe</option>
                   <option value="en">English</option>
                 </select>
               </label>
+              <p className="fo-muted" id="office-language-help">
+                {copy.languageHelp}
+              </p>
+              <label className="fo-setting">
+                {copy.appearance}
+                <select
+                  value={preference}
+                  aria-label={copy.appearance}
+                  aria-describedby="office-theme-help"
+                  onChange={(e) => {
+                    if (e.target.value === 'auto' && !location) setDialog({ kind: 'location' });
+                    else setTheme(e.target.value);
+                  }}
+                >
+                  <option value="auto">{copy.automatic}</option>
+                  <option value="day">{copy.day}</option>
+                  <option value="sunset">{copy.sunset}</option>
+                  <option value="night">{copy.night}</option>
+                </select>
+              </label>
+              <p className="fo-muted" id="office-theme-help">
+                {copy.appearanceHelp}
+              </p>
+              <div className="fo-location-summary">
+                <p>
+                  {location ? (
+                    <>
+                      <strong>{location.name}</strong> ·{' '}
+                      {new Intl.DateTimeFormat(locale, {
+                        timeZone: location.timezone,
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      }).format(now)}{' '}
+                      · {dawn ? copy.dawn : copy[theme]}
+                    </>
+                  ) : (
+                    copy.noLocation
+                  )}
+                </p>
+                <button onClick={() => setDialog({ kind: 'location' })}>
+                  {location ? copy.changeLocation : copy.chooseLocation}
+                </button>
+              </div>
+              <WeatherSettings weather={weather} locale={locale} location={location} />
               <label className="fo-setting">
                 {copy.labels}
                 <input
@@ -582,34 +718,45 @@ export default function FixedOfficeApp() {
                   onChange={(e) => setScreens(e.target.checked)}
                 />
               </label>
-              <h3>{copy.layerTitle}</h3>
-              <p className="fo-muted">{copy.layerNote}</p>
-              <label className="fo-setting">
-                {copy.showCharacters}
-                <input
-                  type="checkbox"
-                  checked={showCharacters}
-                  onChange={(e) => setShowCharacters(e.target.checked)}
-                />
-              </label>
-              <label className="fo-setting">
-                {locale === 'tr' ? 'Cheleby hareket önizlemesi' : 'Cheleby motion preview'}
-                <input
-                  type="checkbox"
-                  checked={motionPreview}
-                  onChange={(e) => setMotionPreview(e.target.checked)}
-                />
-              </label>
-              <div className="fo-prototype-links">
-                <a href="/?view=legacy">
-                  {copy.legacy}
-                  <Icon name="external" size={12} />
-                </a>
-                <a href="/?view=blender">
-                  {copy.blender}
-                  <Icon name="external" size={12} />
-                </a>
-              </div>
+              <details className="fo-advanced">
+                <summary>{locale === 'tr' ? 'Gelişmiş seçenekler' : 'Advanced options'}</summary>
+                <h3>{copy.layerTitle}</h3>
+                <p className="fo-muted">{copy.layerNote}</p>
+                <label className="fo-setting">
+                  {copy.showCharacters}
+                  <input
+                    type="checkbox"
+                    checked={showCharacters}
+                    onChange={(e) => setShowCharacters(e.target.checked)}
+                  />
+                </label>
+                <label className="fo-setting">
+                  {locale === 'tr' ? 'Cheleby hareket önizlemesi' : 'Cheleby motion preview'}
+                  <input
+                    type="checkbox"
+                    checked={motionPreview}
+                    onChange={(e) => setMotionPreview(e.target.checked)}
+                  />
+                </label>
+                <label className="fo-setting">
+                  {locale === 'tr' ? 'Robot hareket önizlemesi' : 'Robot motion preview'}
+                  <input
+                    type="checkbox"
+                    checked={robotMotionPreview}
+                    onChange={(e) => setRobotMotionPreview(e.target.checked)}
+                  />
+                </label>
+                <div className="fo-prototype-links">
+                  <a href="/?view=legacy">
+                    {copy.legacy}
+                    <Icon name="external" size={12} />
+                  </a>
+                  <a href="/?view=blender">
+                    {copy.blender}
+                    <Icon name="external" size={12} />
+                  </a>
+                </div>
+              </details>
             </>
           )}
         </div>

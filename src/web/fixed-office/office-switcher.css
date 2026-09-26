@@ -1,0 +1,69 @@
+.fo-room-switcher {
+  flex-shrink: 0;
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--fo-border);
+}
+.fo-room-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 5px 5px;
+  color: #9fb7cf;
+  font-size: 11px;
+}
+.fo-room-heading button { min-width: 24px; min-height: 24px; }
+.fo-room-cards {
+  display: grid;
+  gap: 5px;
+  max-height: min(28vh, 290px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  padding: 2px;
+}
+.fixed-office .fo-room-card {
+  position: relative;
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding: 8px 7px 8px 17px;
+  border: 1px solid #24394a;
+  background: #101f2a;
+  text-align: left;
+  line-height: 1.25;
+  color: #cedbea;
+}
+.fixed-office .fo-room-card[aria-pressed='true'] { background: #1a3650; border-color: #659cff; }
+.fo-room-card strong, .fo-room-card small, .fo-room-state {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fo-room-card strong { font-size: 11px; }
+.fo-room-card small { font-size: 9px; color: #9eb3c8; }
+.fo-room-state { font-size: 10px; color: #c0ccda; }
+.fo-room-light {
+  position: absolute;
+  top: 11px;
+  left: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #899aaa;
+}
+.fo-room-card[data-office-state='working'] .fo-room-light { background: #63e2c3; box-shadow: 0 0 6px #63e2c344; }
+.fo-room-card[data-office-state='waiting'] .fo-room-light { background: #ffc36d; }
+.fo-room-card[data-office-state='interrupted'] .fo-room-light { background: #f29191; }
+.fo-room-initial { display: none; }
+@media (max-width: 1100px) {
+  .fo-room-heading { justify-content: center; padding: 0; }
+  .fo-room-heading strong { display: none; }
+  .fixed-office .fo-room-card { min-height: 37px; padding: 8px 2px; text-align: center; }
+  .fo-room-card > strong, .fo-room-card > small, .fo-room-state { display: none; }
+  .fo-room-initial { display: block; font-size: 12px; }
+  .fo-room-light { top: 4px; left: auto; right: 3px; width: 5px; height: 5px; }
+}
+@media (max-height: 740px) {
+  .fo-room-switcher { margin-top: 6px; padding-top: 5px; }
+  .fo-room-cards { max-height: 130px; }
+}

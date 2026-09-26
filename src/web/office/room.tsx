@@ -213,7 +213,7 @@ export function WallDisplay({
     ctx.fillText(t.monitor, 66, 51);
     ctx.font = 'bold 65px Segoe UI, sans-serif';
     ctx.fillStyle = '#e6e2d3';
-    ctx.fillText((session?.project ?? 'Cheleby Home').slice(0, 32), 48, 177);
+    ctx.fillText((session?.project ?? 'AI Office').slice(0, 32), 48, 177);
     ctx.font = '25px Segoe UI, sans-serif';
     ctx.fillStyle = '#8fb5b7';
     ctx.fillText(

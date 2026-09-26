@@ -93,7 +93,7 @@ export function OfficeView({
         <div>
           <span className="office-eyebrow">{t.preview}</span>
           <h1>
-            {state.root?.project ?? 'Cheleby Home'}
+            {state.root?.project ?? 'AI Office'}
             <span> / 01</span>
           </h1>
         </div>

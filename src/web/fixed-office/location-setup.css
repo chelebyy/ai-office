@@ -1,0 +1,130 @@
+.fo-location {
+  max-width: 580px;
+}
+.fo-location-intro {
+  color: #c4d6e4;
+  line-height: 1.6;
+  margin: 0 0 22px;
+}
+.fo-location form {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 12px;
+  align-items: end;
+}
+.fo-location label {
+  display: grid;
+  gap: 7px;
+  color: #abc6d8;
+  font-size: 12px;
+  min-width: 0;
+}
+.fo-location select,
+.fo-location input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 38px;
+  min-width: 0;
+  padding: 8px;
+  color: #e1edf5;
+  background: #0a1823;
+  border: 1px solid #365568;
+  border-radius: 7px;
+}
+.fo-location button {
+  min-height: 38px;
+  padding: 8px 14px;
+  border: 1px solid #365568;
+  background: #122c3c;
+  color: #d3e6f1;
+  border-radius: 7px;
+  cursor: pointer;
+}
+.fo-location button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.fo-location-status {
+  margin: 12px 0;
+  color: #f2ca80;
+  font-size: 13px;
+}
+.fo-location-results {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+  max-height: 230px;
+  overflow-y: auto;
+  display: grid;
+  gap: 6px;
+}
+.fo-location-results button {
+  display: grid;
+  gap: 5px;
+  text-align: left;
+  width: 100%;
+}
+.fo-location-results button span {
+  color: #9fbbc9;
+  font-size: 12px;
+}
+.fo-location-results button[aria-pressed='true'] {
+  border-color: #67ccba;
+  background: #183d44;
+}
+.fo-location-selected {
+  font-size: 13px;
+  color: #87d7c8;
+  overflow-wrap: anywhere;
+}
+.fo-location-source {
+  color: #8eacbd;
+  font-size: 11px;
+}
+.fo-location-source a {
+  color: #9fcfe5;
+}
+.fo-location-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 22px;
+}
+/* Keep action spacing above the shared .fixed-office button reset. */
+.fixed-office .fo-location-actions > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  max-width: 100%;
+  min-height: 42px;
+  padding: 10px 16px;
+  line-height: 1.4;
+  text-align: center;
+  white-space: normal;
+}
+.fo-location .fo-location-save {
+  background: #247567;
+  border-color: #409a89;
+  color: #fff;
+}
+.fo-location-summary {
+  padding: 12px;
+  border: 1px solid #294555;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+.fo-location-summary p {
+  margin: 0 0 8px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+  .fo-location form {
+    grid-template-columns: 1fr;
+  }
+  .fo-location-actions {
+    flex-wrap: wrap;
+  }
+}

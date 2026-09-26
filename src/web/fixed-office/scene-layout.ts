@@ -11,6 +11,35 @@ export const CLEAN_PLATE = '/office/studio-clean.png';
 export type CharacterId = 'main' | 'blue' | 'green' | 'purple';
 export type Point = readonly [number, number];
 export type Quad = readonly [Point, Point, Point, Point];
+export type ScreenCurve = { top: number; bottom: number };
+
+export function screenEdge(quad: Quad, t: number, bottom = false, curve?: ScreenCurve): Point {
+  const [a, b] = bottom ? [quad[3], quad[2]] : [quad[0], quad[1]];
+  const bow = curve ? (bottom ? curve.bottom : curve.top) : 0;
+  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t + 4 * t * (1 - t) * bow];
+}
+
+export function screenOutline(quad: Quad, curve?: ScreenCurve): Point[] {
+  if (!curve) return [...quad];
+  const top = Array.from({ length: 13 }, (_, i) => screenEdge(quad, i / 12, false, curve));
+  const bottom = Array.from({ length: 13 }, (_, i) => screenEdge(quad, 1 - i / 12, true, curve));
+  return [...top, ...bottom];
+}
+
+export function screenSlices(quad: Quad, curve: ScreenCurve) {
+  return Array.from({ length: 12 }, (_, i) => {
+    const from = i / 12;
+    // Tiny overlap prevents antialias seams without adding another animation clock.
+    const to = Math.min(1, (i + 1) / 12 + 0.0005);
+    const corners: Quad = [
+      screenEdge(quad, from, false, curve),
+      screenEdge(quad, to, false, curve),
+      screenEdge(quad, to, true, curve),
+      screenEdge(quad, from, true, curve),
+    ];
+    return { from, to, quad: corners };
+  });
+}
 
 // Source coordinates keep the room, screens and characters aligned at every desktop size.
 // Body patches retain adjacent chair/contact pixels for the B2 still. B3 pose atlases need
@@ -46,15 +75,21 @@ export const characters = [
   },
 ] as const;
 
-export const monitors: { id: string; actor: CharacterId; quad: Quad; wall?: boolean }[] = [
+export const monitors: {
+  id: string;
+  actor: CharacterId;
+  quad: Quad;
+  wall?: boolean;
+  curve?: ScreenCurve;
+}[] = [
   {
     id: 'wall',
     actor: 'main',
     wall: true,
     quad: [
-      [190, 28],
-      [783, 53],
-      [781, 243],
+      [184, 25],
+      [779, 60],
+      [777, 236],
       [191, 281],
     ],
   },
@@ -62,59 +97,60 @@ export const monitors: { id: string; actor: CharacterId; quad: Quad; wall?: bool
     id: 'main-left',
     actor: 'main',
     quad: [
-      [520, 483],
-      [593, 468],
-      [593, 532],
-      [522, 551],
+      [519, 482],
+      [592, 463],
+      [592, 531.5],
+      [520, 550],
     ],
   },
   {
     id: 'main-center',
     actor: 'main',
+    curve: { top: -3.4, bottom: -3.6 },
     quad: [
-      [602, 461],
-      [751, 455],
-      [750, 532],
-      [603, 538],
+      [601.5, 463],
+      [747.5, 456],
+      [747.5, 530],
+      [601.5, 531],
     ],
   },
   {
     id: 'main-right',
     actor: 'main',
     quad: [
-      [761, 463],
-      [889, 495],
-      [885, 574],
-      [759, 532],
+      [758, 457],
+      [888.5, 494],
+      [883.5, 572],
+      [756.5, 531],
     ],
   },
   {
     id: 'blue-left',
     actor: 'blue',
     quad: [
-      [489, 300],
-      [539, 289],
-      [540, 337],
-      [490, 345],
+      [490, 301],
+      [538.5, 293],
+      [539, 335.5],
+      [490, 343],
     ],
   },
   {
     id: 'blue-center',
     actor: 'blue',
     quad: [
-      [544, 289],
-      [592, 286],
-      [592, 331],
-      [544, 336],
+      [544, 291],
+      [591, 288],
+      [591, 330],
+      [544, 334.5],
     ],
   },
   {
     id: 'blue-inner',
     actor: 'blue',
     quad: [
-      [596, 289],
-      [645, 292],
-      [645, 333],
+      [596, 287],
+      [645, 290],
+      [645, 332],
       [596, 330],
     ],
   },
@@ -122,70 +158,74 @@ export const monitors: { id: string; actor: CharacterId; quad: Quad; wall?: bool
     id: 'blue-right',
     actor: 'blue',
     quad: [
-      [653, 294],
-      [695, 303],
-      [693, 345],
-      [653, 334],
+      [651, 292],
+      [693, 303],
+      [691, 342],
+      [651, 332],
     ],
   },
   {
     id: 'green-left',
     actor: 'green',
     quad: [
-      [795, 264],
-      [856, 267],
-      [856, 307],
-      [795, 300],
+      [796, 263],
+      [855, 265],
+      [854, 302],
+      [795, 296],
     ],
   },
   {
     id: 'green-center',
     actor: 'green',
     quad: [
-      [860, 270],
-      [914, 280],
-      [914, 318],
-      [858, 309],
+      [861, 266.5],
+      [913, 273],
+      [911.5, 312],
+      [860, 303],
     ],
   },
   {
     id: 'green-right',
     actor: 'green',
     quad: [
-      [919, 284],
-      [957, 294],
-      [955, 326],
-      [918, 315],
+      [918, 275],
+      [957, 285.5],
+      [955, 324],
+      [917, 313],
     ],
   },
   {
     id: 'purple-left',
     actor: 'purple',
     quad: [
-      [1008, 367],
-      [1062, 365],
-      [1060, 410],
-      [1007, 414],
+      [1007, 367],
+      [1062, 364],
+      [1059, 409],
+      [1006, 413],
     ],
   },
   {
     id: 'purple-center',
     actor: 'purple',
+    // Inner bezel corners in CLEAN_PLATE, which reconstructs the old label area.
     quad: [
-      [1074, 366],
-      [1170, 389],
-      [1165, 435],
-      [1071, 410],
+      [1074, 363],
+      [1162, 379],
+      [1157, 431],
+      [1072, 410],
     ],
   },
   {
     id: 'purple-right',
     actor: 'purple',
+    // The right display recedes more steeply than the center display. Match its
+    // full inner surface, including the lower-right corner, rather than an inset
+    // rectangle that leaves a widening black wedge along the bezel.
     quad: [
-      [1178, 393],
-      [1224, 411],
-      [1217, 452],
-      [1175, 435],
+      [1166, 378.6],
+      [1219, 400.5],
+      [1212, 453],
+      [1161, 432.6],
     ],
   },
 ];

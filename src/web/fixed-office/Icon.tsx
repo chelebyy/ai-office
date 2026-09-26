@@ -1,4 +1,5 @@
 export type IconName =
+  | 'power'
   | 'live'
   | 'agents'
   | 'tasks'
@@ -19,6 +20,7 @@ export type IconName =
   | 'external'
   | 'search';
 const paths: Record<IconName, string> = {
+  power: 'M12 2v10M6 5a9 9 0 1 0 12 0',
   live: 'M7 4h10l3 3v12H4V7l3-3ZM9 4V2h6v2M8 10h8v6H8Z',
   agents:
     'M15 8a3 3 0 1 1-6 0a3 3 0 0 1 6 0ZM5 20v-3c0-3 3-4 7-4s7 1 7 4v3M4 9a2 2 0 0 0 0 4M20 9a2 2 0 0 1 0 4',

@@ -4,10 +4,11 @@ import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { WebSocketServer, WebSocket } from 'ws';
-import type { CodexObserver } from './reader.ts';
+import type { OfficeRuntime, OfficeCommand, OfficeReader } from './office-runtime.ts';
 
 export interface ServerOptions {
-  observer: CodexObserver;
+  observer: Pick<OfficeReader, 'snapshot' | 'on' | 'off'>;
+  runtime?: Pick<OfficeRuntime, 'status' | 'command'>;
   webRoot?: string;
   // Development middleware shares this exact host and port. There is no CORS proxy.
   middleware?: (req: IncomingMessage, res: ServerResponse, next: () => void) => void;
@@ -16,22 +17,34 @@ export interface ServerOptions {
 export function createObserverServer(options: ServerOptions) {
   const { observer } = options;
   const token = randomBytes(32).toString('hex');
+  const controlToken = randomBytes(32).toString('hex');
   let origin = '';
   const sockets = new WebSocketServer({ noServer: true, maxPayload: 1024 });
 
   function isLocalRequest(req: IncomingMessage): boolean {
-    return req.headers.host === new URL(origin).host
-      && (!req.headers.origin || req.headers.origin === origin)
-      && (!req.headers['sec-fetch-site'] || ['same-origin', 'none'].includes(String(req.headers['sec-fetch-site'])));
+    return (
+      req.headers.host === new URL(origin).host &&
+      (!req.headers.origin || req.headers.origin === origin) &&
+      (!req.headers['sec-fetch-site'] ||
+        ['same-origin', 'none'].includes(String(req.headers['sec-fetch-site'])))
+    );
   }
   function authenticated(req: IncomingMessage): boolean {
-    const cookie = req.headers.cookie?.split(';').map(x => x.trim()).find(x => x.startsWith('cheleby_session='))?.slice(16) ?? '';
+    const cookie =
+      req.headers.cookie
+        ?.split(';')
+        .map((x) => x.trim())
+        .find((x) => x.startsWith('cheleby_session='))
+        ?.slice(16) ?? '';
     const supplied = Buffer.from(cookie);
     const expected = Buffer.from(token);
     return supplied.length === expected.length && timingSafeEqual(supplied, expected);
   }
   function json(res: ServerResponse, code: number, value: unknown) {
-    res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+    res.writeHead(code, {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'no-store',
+    });
     res.end(JSON.stringify(value));
   }
 
@@ -40,32 +53,120 @@ export function createObserverServer(options: ServerOptions) {
     res.setHeader('Referrer-Policy', 'no-referrer');
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('Cache-Control', 'no-store');
-    if (!origin || !isLocalRequest(req)) { json(res, 403, { error: 'Forbidden origin' }); return; }
-    if (req.method !== 'GET') { json(res, 405, { error: 'Read-only observer' }); return; }
+    if (!origin || !isLocalRequest(req)) {
+      json(res, 403, { error: 'Forbidden origin' });
+      return;
+    }
     const url = new URL(req.url ?? '/', origin);
+    if (url.pathname === '/api/runtime' || url.pathname.startsWith('/api/runtime/')) {
+      if (!options.runtime) {
+        json(res, 404, { error: 'Runtime control unavailable' });
+        return;
+      }
+      if (!authenticated(req)) {
+        json(res, 401, { error: 'Open the local app first' });
+        return;
+      }
+      if (req.method === 'GET' && url.pathname === '/api/runtime') {
+        json(res, 200, { ...options.runtime.status(), controlToken });
+        return;
+      }
+      if (req.method !== 'POST') {
+        json(res, 405, { error: 'Method not allowed' });
+        return;
+      }
+      const supplied = Buffer.from(String(req.headers['x-cheleby-control'] ?? ''));
+      const expected = Buffer.from(controlToken);
+      if (
+        req.headers.origin !== origin ||
+        supplied.length !== expected.length ||
+        !timingSafeEqual(supplied, expected)
+      ) {
+        json(res, 403, { error: 'Forbidden control request' });
+        return;
+      }
+      const action = url.pathname.slice('/api/runtime/'.length);
+      if (!['start', 'stop', 'restart'].includes(action)) {
+        json(res, 404, { error: 'Unknown command' });
+        return;
+      }
+      // Commands carry no user text, shell arguments or request body.
+      if (req.headers['transfer-encoding'] || Number(req.headers['content-length'] ?? 0) !== 0) {
+        res.setHeader('Connection', 'close');
+        json(res, 400, { error: 'This command accepts no body' });
+        return;
+      }
+      try {
+        options.runtime.command(action as OfficeCommand);
+        json(res, 202, options.runtime.status());
+      } catch {
+        json(res, 409, { error: 'An office operation is already in progress' });
+      }
+      return;
+    }
+    if (req.method !== 'GET') {
+      json(res, 405, { error: 'Read-only observer' });
+      return;
+    }
     if (url.pathname === '/api/health') {
-      json(res, 200, { name: 'cheleby-home', schemaVersion: 1 }); return;
+      json(res, 200, { name: 'cheleby-home', schemaVersion: 1, processId: process.pid });
+      return;
     }
     if (url.pathname === '/api/snapshot') {
-      if (!authenticated(req)) { json(res, 401, { error: 'Open the local app first' }); return; }
-      json(res, 200, observer.snapshot()); return;
+      if (!authenticated(req)) {
+        json(res, 401, { error: 'Open the local app first' });
+        return;
+      }
+      json(res, 200, observer.snapshot());
+      return;
     }
-    if (url.pathname.startsWith('/api/')) { json(res, 404, { error: 'Not found' }); return; }
-    if (url.pathname === '/') res.setHeader('Set-Cookie', `cheleby_session=${token}; HttpOnly; SameSite=Strict; Path=/`);
-    if (options.middleware) { options.middleware(req, res, () => { res.writeHead(404); res.end('Not found'); }); return; }
+    if (url.pathname.startsWith('/api/')) {
+      json(res, 404, { error: 'Not found' });
+      return;
+    }
+    if (url.pathname === '/')
+      res.setHeader('Set-Cookie', `cheleby_session=${token}; HttpOnly; SameSite=Strict; Path=/`);
+    if (options.middleware) {
+      options.middleware(req, res, () => {
+        res.writeHead(404);
+        res.end('Not found');
+      });
+      return;
+    }
     void (async () => {
-      const relative = url.pathname === '/' ? 'index.html' : decodeURIComponent(url.pathname).replace(/^\/+/, '');
+      const relative =
+        url.pathname === '/' ? 'index.html' : decodeURIComponent(url.pathname).replace(/^\/+/, '');
       const root = path.resolve(options.webRoot ?? 'dist/web');
       const filename = path.resolve(root, relative);
-      if (!filename.startsWith(root + path.sep)) { res.writeHead(403); res.end(); return; }
+      if (!filename.startsWith(root + path.sep)) {
+        res.writeHead(403);
+        res.end();
+        return;
+      }
       try {
         const body = await readFile(filename);
         const extension = path.extname(filename);
-        const types: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png' };
-        res.setHeader('Content-Security-Policy', `default-src 'self'; connect-src 'self' ${origin.replace('http:', 'ws:')}; style-src 'self'; script-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'`);
-        res.writeHead(200, { 'Content-Type': types[extension] ?? 'application/octet-stream' }); res.end(body);
-      } catch { res.writeHead(404); res.end('Run npm run build before npm start.'); }
-    })().catch(() => { if (!res.headersSent) res.writeHead(400); res.end(); });
+        const types: Record<string, string> = {
+          '.html': 'text/html; charset=utf-8',
+          '.js': 'text/javascript; charset=utf-8',
+          '.css': 'text/css; charset=utf-8',
+          '.svg': 'image/svg+xml',
+          '.png': 'image/png',
+        };
+        res.setHeader(
+          'Content-Security-Policy',
+          `default-src 'self'; connect-src 'self' ${origin.replace('http:', 'ws:')} https://geocoding-api.open-meteo.com https://api.open-meteo.com; style-src 'self'; script-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'`,
+        );
+        res.writeHead(200, { 'Content-Type': types[extension] ?? 'application/octet-stream' });
+        res.end(body);
+      } catch {
+        res.writeHead(404);
+        res.end('Run npm run build before npm start.');
+      }
+    })().catch(() => {
+      if (!res.headersSent) res.writeHead(400);
+      res.end();
+    });
   });
 
   server.on('upgrade', (req, socket, head) => {
@@ -76,9 +177,11 @@ export function createObserverServer(options: ServerOptions) {
       return;
     }
     if (!origin || !isLocalRequest(req) || req.headers.origin !== origin || !authenticated(req)) {
-      socket.write('HTTP/1.1 403 Forbidden\r\n\r\n'); socket.destroy(); return;
+      socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
+      socket.destroy();
+      return;
     }
-    sockets.handleUpgrade(req, socket, head, client => {
+    sockets.handleUpgrade(req, socket, head, (client) => {
       client.on('error', () => {});
       client.send(JSON.stringify(observer.snapshot()));
       // No application commands are accepted from the browser.
@@ -89,7 +192,10 @@ export function createObserverServer(options: ServerOptions) {
     const message = JSON.stringify(snapshot);
     for (const client of sockets.clients) {
       if (client.readyState !== WebSocket.OPEN) continue;
-      if (client.bufferedAmount > 2 * 1024 * 1024) { client.close(1013, 'Slow connection'); continue; }
+      if (client.bufferedAmount > 2 * 1024 * 1024) {
+        client.close(1013, 'Slow connection');
+        continue;
+      }
       client.send(message);
     }
   };
@@ -100,7 +206,10 @@ export function createObserverServer(options: ServerOptions) {
     async listen(port = 4317): Promise<string> {
       await new Promise<void>((resolve, reject) => {
         server.once('error', reject);
-        server.listen(port, '127.0.0.1', () => { server.off('error', reject); resolve(); });
+        server.listen(port, '127.0.0.1', () => {
+          server.off('error', reject);
+          resolve();
+        });
       });
       const address = server.address();
       if (!address || typeof address === 'string') throw new Error('TCP address unavailable');
@@ -110,8 +219,8 @@ export function createObserverServer(options: ServerOptions) {
     async close(): Promise<void> {
       observer.off('snapshot', broadcast);
       for (const client of sockets.clients) client.terminate();
-      await new Promise<void>(resolve => sockets.close(() => resolve()));
-      await new Promise<void>(resolve => server.close(() => resolve()));
+      await new Promise<void>((resolve) => sockets.close(() => resolve()));
+      await new Promise<void>((resolve) => server.close(() => resolve()));
     },
   };
 }

@@ -1,8 +1,11 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import type { Locale } from '../../shared/contract.ts';
+import type { Locale, SessionView } from '../../shared/contract.ts';
+import { STALE_AFTER_MS } from '../office/office-state.ts';
+import type { Connection } from './fixed-state.ts';
+import { INITIAL_MOTION_POSE, liveMotion, type MotionMode } from './live-motion.ts';
 import './cheleby-motion.css';
 
-export type MotionMode = 'idle' | 'typing';
+export type { MotionMode } from './live-motion.ts';
 export const MOTION_BACKGROUND = '/office/cheleby-motion/desk-clean-v1.png';
 const strips = {
   idle: '/office/cheleby-motion/idle-v4.webp',
@@ -11,8 +14,9 @@ const strips = {
 
 // Only this forearm/hand region advances through the typing atlas. Everything
 // outside it uses frame zero, so generated chair and body details cannot flicker.
+// The upper-left notch excludes the chin/mask in every atlas frame.
 const typingHandsPath =
-  'M 191 136 L 263 136 L 267 158 L 270 180 L 280 194 L 280 218 L 245 226 L 216 223 L 192 224 L 179 219 L 173 205 L 178 187 L 183 173 L 188 157 Z';
+  'M 188 171 L 192 165 L 220 165 L 224 153 L 224 136 L 263 136 L 267 158 L 270 180 L 280 194 L 280 218 L 245 226 L 216 223 L 192 224 L 179 219 L 173 205 L 178 187 L 183 173 Z';
 // Overlap the static layer by one source pixel at the seam to avoid an
 // antialiasing gap between complementary masks on fractional SVG positions.
 const spriteMask = (body: boolean) =>
@@ -31,7 +35,8 @@ const words = {
     title: 'Cheleby · Hareket önizlemesi',
     idle: 'Bekleme',
     typing: 'Yazma',
-    close: 'Önizlemeyi kapat',
+    close: 'Canlı harekete dön',
+    retry: 'Hareketleri yeniden yükle',
     loading: 'Hareketler yükleniyor…',
     failed: 'Hareket yüklenemedi; mevcut görünüm korunuyor.',
     reduced: 'Azaltılmış hareket açık.',
@@ -42,7 +47,8 @@ const words = {
     title: 'Cheleby · Motion preview',
     idle: 'Idle',
     typing: 'Typing',
-    close: 'Close preview',
+    close: 'Return to live motion',
+    retry: 'Reload motion',
     loading: 'Loading motion…',
     failed: 'Motion could not load; the current scene is retained.',
     reduced: 'Reduced motion is enabled.',
@@ -51,9 +57,26 @@ const words = {
   },
 };
 
-export function useChelebyMotion(enabled: boolean, viewPaused: boolean) {
+export function useChelebyMotion({
+  enabled,
+  preview,
+  session,
+  connection,
+  viewPaused,
+  now,
+}: {
+  enabled: boolean;
+  preview: boolean;
+  session?: SessionView;
+  connection: Connection;
+  viewPaused: boolean;
+  now: number;
+}) {
   const [assets, setAssets] = useState<'loading' | 'ready' | 'failed'>('loading');
-  const [mode, setMode] = useState<MotionMode>('idle');
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const [previewMode, setMode] = useState<MotionMode>('idle');
+  const [pose, setPose] = useState(INITIAL_MOTION_POSE);
+  const [, refreshClock] = useState(0);
   const [hidden, setHidden] = useState(() => document.hidden);
   const [reduced, setReduced] = useState(
     () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
@@ -78,7 +101,7 @@ export function useChelebyMotion(enabled: boolean, viewPaused: boolean) {
     return () => {
       cancelled = true;
     };
-  }, [enabled]);
+  }, [enabled, loadAttempt]);
   useEffect(() => {
     if (!enabled) return;
     const media = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -93,13 +116,31 @@ export function useChelebyMotion(enabled: boolean, viewPaused: boolean) {
       media.removeEventListener('change', onMotion);
     };
   }, [enabled]);
+  // Expire at the record boundary even if the server sends no further data.
+  useEffect(() => {
+    if (!enabled || preview || viewPaused || hidden || connection !== 'connected') return;
+    const remaining = Date.parse(session?.lastEventAt ?? '') + STALE_AFTER_MS - Date.now() + 1;
+    if (!Number.isFinite(remaining) || remaining <= 0) return;
+    const timer = window.setTimeout(() => refreshClock((tick) => tick + 1), remaining);
+    return () => window.clearTimeout(timer);
+  }, [enabled, preview, viewPaused, hidden, connection, session?.lastEventAt]);
+
+  const live = liveMotion(pose, session, connection, viewPaused, hidden, Math.max(now, Date.now()));
+  // Remember the real pose separately from preview. A guarded update before
+  // children render prevents a frame from the previous room on selection.
+  if (live.sessionId !== pose.sessionId || live.mode !== pose.mode) {
+    setPose({ sessionId: live.sessionId, mode: live.mode });
+  }
   return {
     ready: enabled && assets === 'ready',
     assets,
-    mode,
+    mode: preview ? previewMode : live.mode,
     setMode,
+    retry: () => setLoadAttempt((attempt) => attempt + 1),
+    source: preview ? 'preview' : 'live',
     reduced,
-    frozen: viewPaused || hidden || reduced,
+    hidden,
+    frozen: viewPaused || hidden || reduced || (!preview && live.frozen),
   };
 }
 
@@ -114,6 +155,7 @@ export function ChelebyMotionSprite({ motion }: { motion: Motion }) {
         key={state}
         className="fo-cheleby-composite"
         data-motion={state}
+        data-motion-source={motion.source}
         data-frozen={motion.frozen}
       >
         {state === 'typing' && (
@@ -135,6 +177,17 @@ export function ChelebyMotionSprite({ motion }: { motion: Motion }) {
         />
       </div>
     </foreignObject>
+  );
+}
+
+export function ChelebyMotionFallback({ motion, locale }: { motion: Motion; locale: Locale }) {
+  if (motion.assets !== 'failed') return null;
+  const copy = words[locale];
+  return (
+    <div className="fo-motion-controls" role="status">
+      <small>{copy.failed}</small>
+      <button onClick={motion.retry}>{copy.retry}</button>
+    </div>
   );
 }
 
@@ -179,6 +232,7 @@ export function ChelebyMotionControls({
                 ? copy.paused
                 : copy.note}
       </small>
+      {motion.assets === 'failed' && <button onClick={motion.retry}>{copy.retry}</button>}
     </section>
   );
 }

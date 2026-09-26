@@ -12,14 +12,14 @@
     sans-serif;
   display: grid;
   --fo-sidebar-width: clamp(112px, 9.77vw, 150px);
-  --fo-right-width: clamp(190px, 16.28vw, 250px);
-  --fo-bottom-height: clamp(180px, 32dvh, 255px);
+  --fo-right-width: clamp(240px, 20vw, 300px);
+  --fo-bottom-height: clamp(300px, 38dvh, 420px);
   /* Keep the complete room in proportion; panels use all remaining viewport space. */
   --fo-room-width: min(
     calc(100vw - var(--fo-sidebar-width) - var(--fo-right-width)),
-    calc((100dvh - var(--fo-bottom-height)) * 1135 / 757)
+    calc((100dvh - var(--fo-bottom-height) - 56px) * 1135 / 757)
   );
-  grid-template-columns: var(--fo-sidebar-width) var(--fo-room-width) minmax(0, 1fr);
+  grid-template-columns: var(--fo-sidebar-width) minmax(0, 1fr) var(--fo-right-width);
   min-width: 0;
   min-height: 0;
   height: 100dvh;
@@ -336,7 +336,7 @@
 }
 .fo-source-banner {
   position: absolute;
-  top: 8px;
+  top: 64px;
   left: 8px;
   right: 8px;
   z-index: 5;
@@ -1136,7 +1136,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-template-rows: repeat(2, minmax(0, 1fr));
   }
-  .fo-activity {
+  .fo-right > .fo-projects {
     grid-row: 1 / -1;
   }
   .fo-stats {
@@ -1151,5 +1151,382 @@
 @media (prefers-reduced-motion: reduce) {
   .fixed-office * {
     scroll-behavior: auto !important;
+  }
+}
+
+/* Readable workspace: one conversation surface, with the room composition preserved. */
+.fo-artwork {
+  width: min(100%, var(--fo-room-width));
+  justify-self: center;
+}
+.fo-feed-action-details {
+  margin: 8px 0 0 32px;
+}
+.fo-feed-action-details summary {
+  cursor: pointer;
+  color: #a7becd;
+  font-size: 12px;
+  padding: 6px 0;
+}
+.fo-feed-action-details summary:focus-visible {
+  outline: 2px solid #8cbaff;
+}
+.fo-workspace {
+  grid-template-rows: 56px calc(var(--fo-room-width) * 757 / 1135) minmax(0, 1fr);
+}
+.fo-workspace-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 12px;
+  min-width: 0;
+  border-bottom: 1px solid var(--fo-border);
+}
+.fo-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.fixed-office .fo-expand-feed {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #284353;
+  background: #10212e;
+  color: #c7e1f1;
+}
+.fixed-office .fo-room-picker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px;
+  text-align: left;
+}
+.fo-room-picker span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fo-workspace-toolbar .fo-power {
+  position: relative;
+  top: auto;
+  right: auto;
+  flex-shrink: 0;
+}
+.fixed-office .fo-power-trigger {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px;
+}
+.fo-bottom-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(200px, 0.45fr);
+}
+.fo-console > .fo-wall-expanded {
+  height: auto;
+  min-height: 0;
+  flex: 1;
+  border: 0;
+  border-radius: 0;
+}
+.fo-console .fo-feed-heading {
+  padding: 10px 12px;
+  gap: 8px;
+}
+.fo-console .fo-feed-heading strong {
+  font-size: 14px;
+}
+.fo-console .fo-feed-eyebrow {
+  display: none;
+}
+.fo-console .fo-feed-scroll {
+  padding: 8px 14px 16px;
+}
+.fo-console .fo-feed-footer {
+  padding: 8px 12px;
+  flex-wrap: wrap;
+}
+.fo-right {
+  grid-template-rows: minmax(220px, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
+}
+.fo-right .fo-projects,
+.fo-right .fo-stats {
+  grid-column: 1;
+  grid-row: auto;
+}
+.fo-brand {
+  font-size: 23px;
+  letter-spacing: -0.6px;
+}
+.fo-brand span {
+  font-size: 10px;
+  letter-spacing: 3px;
+}
+.fo-panel-header {
+  min-height: 48px;
+  height: 48px;
+}
+.fixed-office .fo-panel-header button {
+  min-width: 36px;
+  min-height: 36px;
+}
+.fixed-office .fo-panel-link {
+  min-height: 44px;
+  font-size: 13px;
+}
+.fixed-office .fo-team-list > button {
+  min-height: 48px;
+  padding: 6px 8px;
+}
+.fo-team-list strong {
+  font-size: 13px;
+  line-height: 1.4;
+}
+.fo-team-list small {
+  font-size: 12px;
+  line-height: 1.4;
+}
+.fo-stat-note {
+  font-size: 12px;
+}
+.fo-panel-tabs {
+  display: none;
+}
+.fixed-office .fo-badge-empty {
+  min-height: 0;
+  padding: 5px 7px;
+  opacity: 0.75;
+}
+.fixed-office .fo-open-feed {
+  min-height: 32px;
+  font-size: 12px;
+  opacity: 1;
+}
+.fo-advanced {
+  margin-top: 24px;
+  border-top: 1px solid var(--fo-border);
+}
+.fo-advanced summary {
+  cursor: pointer;
+  padding: 16px 0;
+  font-size: 14px;
+}
+.fo-advanced summary:focus-visible {
+  outline: 2px solid #8cbaff;
+  outline-offset: 2px;
+}
+.fo-scope-count {
+  display: contents;
+}
+.fo-setting {
+  gap: 16px;
+}
+.fo-setting select {
+  max-width: 60%;
+  min-height: 40px;
+}
+.fixed-office .fo-dialog-content > header > button {
+  min-width: 44px;
+  min-height: 44px;
+}
+.fixed-office .fo-dialog.fo-feed-dialog {
+  height: min(85dvh, 900px);
+  overflow: hidden;
+}
+.fo-feed-dialog .fo-dialog-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.fo-feed-dialog .fo-dialog-content > header {
+  flex-shrink: 0;
+}
+.fo-feed-dialog .fo-wall-expanded {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+}
+@media (max-width: 1100px) {
+  .fixed-office {
+    --fo-sidebar-width: 64px;
+    --fo-right-width: 0px;
+    grid-template-columns: 64px minmax(0, 1fr);
+  }
+  .fo-right {
+    display: none;
+  }
+  .fo-brand {
+    font-size: 14px;
+  }
+  .fo-brand span {
+    font-size: 9px;
+    letter-spacing: 1px;
+  }
+  .fo-workspace {
+    grid-template-rows: 56px auto minmax(300px, 1fr);
+  }
+  .fo-artwork {
+    width: min(100%, var(--fo-room-width));
+    justify-self: center;
+  }
+  .fo-panel-header h2 {
+    font-size: 14px;
+  }
+}
+@media (max-width: 799px) {
+  .fixed-office {
+    display: block;
+    height: 100dvh;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .fo-sidebar {
+    height: auto;
+    padding: 10px 12px;
+    border-right: 0;
+    border-bottom: 1px solid var(--fo-border);
+  }
+  .fo-brand {
+    text-align: left;
+    padding: 0 4px 8px;
+    font-size: 20px;
+  }
+  .fo-brand span {
+    display: inline;
+    margin-left: 8px;
+  }
+  .fo-sidebar nav {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin: 0;
+    gap: 4px;
+  }
+  .fixed-office .fo-sidebar nav button {
+    min-height: 44px;
+    padding: 6px 2px;
+    gap: 4px;
+    flex-direction: column;
+    font-size: 12px;
+  }
+  .fo-sidebar nav button > span {
+    position: static;
+    width: auto;
+    height: auto;
+    clip-path: none;
+    overflow: visible;
+  }
+  .fo-sidebar nav button > svg {
+    width: 16px;
+    height: 16px;
+  }
+  .fo-nav-active i,
+  .fo-sidebar-bottom {
+    display: none;
+  }
+  .fo-workspace {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    overflow: visible;
+  }
+  .fo-workspace-toolbar {
+    min-height: 56px;
+  }
+  .fo-artwork {
+    width: 100%;
+    flex-shrink: 0;
+  }
+  .fo-panel-tabs {
+    display: flex;
+    gap: 8px;
+    padding: 12px;
+    border-bottom: 1px solid var(--fo-border);
+  }
+  .fixed-office .fo-panel-tabs button {
+    flex: 1;
+    min-height: 44px;
+    border: 1px solid #284353;
+    padding: 8px 12px;
+  }
+  .fixed-office .fo-panel-tabs button[aria-pressed='true'] {
+    background: #17394d;
+    border-color: #7eb5ce;
+    color: #e8f5fc;
+  }
+  .fo-bottom-grid {
+    display: block;
+    height: auto;
+    padding: 12px;
+    overflow: visible;
+  }
+  .fo-bottom-grid[data-mobile-panel='feed'] .fo-team,
+  .fo-bottom-grid[data-mobile-panel='agents'] .fo-console {
+    display: none;
+  }
+  .fo-console {
+    height: min(72dvh, 680px);
+    min-height: 360px;
+  }
+  .fo-team {
+    min-height: 280px;
+  }
+  .fo-team-list {
+    overflow: visible;
+  }
+  .fixed-office .fo-team-list > button {
+    min-height: 56px;
+    padding: 8px 12px;
+  }
+  .fo-team-list strong {
+    font-size: 14px;
+  }
+  .fo-team-list small {
+    font-size: 12px;
+  }
+  .fixed-office .fo-badge {
+    display: none;
+  }
+  .fixed-office .fo-open-feed {
+    min-height: 44px;
+    left: 12px;
+  }
+  .fixed-office .fo-dialog {
+    width: calc(100vw - 24px);
+    max-width: none;
+    max-height: calc(100dvh - 24px);
+  }
+  .fo-dialog-content {
+    padding: 20px 16px;
+  }
+  .fo-dialog-content > header {
+    padding-right: 42px;
+  }
+  .fo-dialog-content h2 {
+    font-size: 22px;
+  }
+  .fo-dialog .fo-setting {
+    flex-wrap: wrap;
+    padding: 8px 0;
+  }
+  .fo-dialog .fo-setting select {
+    max-width: 100%;
+  }
+  .fo-feed-heading {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .fo-feed-heading > div {
+    max-width: 100%;
+  }
+  .fo-question-card {
+    top: 8px;
+    max-height: calc(100% - 16px);
   }
 }

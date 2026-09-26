@@ -1,10 +1,47 @@
-# Cheleby Home
+# AI Office
+
+A desktop-browser office for watching your **OpenAI Codex** sessions and agents work in real time.
+
+**Compatibility:** Built for and tested with Codex only. Other LLMs, assistants, and agent tools have not been tested; compatibility is not claimed. AI Office is an independent community project, not an official OpenAI product. Earlier development notes use the former name **Cheleby Home**.
+
+**License:** [MIT](LICENSE). You may use, copy, modify, redistribute, and sell this project, including in commercial and closed-source projects, as long as you retain the copyright and license notice. No warranty is provided. Third-party dependencies retain their own licenses.
+
+## Quick start
+
+Install Node.js 24.13 or later within the 24.x line, and use Codex locally so there are sessions to observe.
+
+```sh
+git clone https://github.com/chelebyy/ai-office.git
+cd ai-office
+npm ci
+npm run build
+npm start
+```
+
+Open the local URL printed in the terminal (normally http://127.0.0.1:4317). The observer reads local Codex session records; it does not provide a model subscription or run another LLM. The office may display session messages and tool activity, so review what is visible before sharing screenshots or a screen recording.
+
+## Türkçe
+
+**Uyumluluk:** Yalnızca Codex için geliştirildi ve Codex ile denendi. Diğer LLM ve ajan araçlarıyla denenmedi; uyumluluk garantisi verilmez. Bağımsız bir topluluk projesidir.
+
+**Lisans:** MIT lisansı ile herkes kullanabilir, değiştirebilir, paylaşabilir ve ticari projelerine dahil edebilir. Telif ve lisans metni korunmalıdır. Garanti verilmez; üçüncü taraf bağımlılıklar kendi lisanslarına tabidir.
+
+## Geliştirme notları
 
 Codex oturumlarını, kullanıcının seçtiği ofis görüntüsünde **sabit bir kamera açısından** izleme projesi. Güncel yön: referans görselden hazırlanan ofis katmanları, Cheleby'nin masada oturan ofis sürümü, ayrı robotlar, hareketli ekran içerikleri ve gerçek React bilgi panelleri. Serbest gezinme yok; bu aşamada masaüstü hedefleniyor.
 
-**B2 sabit ofis, B3 Cheleby hareket önizlemesi, canlı laptop ekranı ve gerçek ajan adları hazır.** Kaynak ofis, perspektif ekranlar ve gerçek React panelleri mevcut yerel gözlemciyle çalışıyor. `/?view=office&motion=preview` veya Ayarlar → Cheleby hareket önizlemesi ile bekleme/yazma seçilebilir. Her iki poz gözlüksüzdür; beklerken bize, yazarken laptopa bakar. Yazarken eller sırayla kalkıp klavyeye basar; iki durum aynı referans ölçeğine hizalanır. Yazmada sandalye/gövde sabit, el/önkol katmanı hareketlidir. Laptop gerçek araç olaylarını ve görünür mesajı gösterir; ajan adları metadata üzerinden gelir. Sıradaki adım Cheleby'nin Bekleme/Yazma durumunu gerçek taze olaylara bağlamaktır; robot hareketleri ardından gelir. [B2 kaydı](docs/B2_FIXED_OFFICE_WEB_2026-09-12.md) · [B3 kapsamı ve doğrulama](docs/B3_CHELEBY_MOTION_PREVIEW_2026-09-12.md).
+**B2 sabit ofis, B3 hareketler ve r11 küçük ve yuvarlak robot başları ile canlı Cheleby/robot bağlantısı hazır.** Kaynak ofis, perspektif ekranlar ve gerçek React panelleri mevcut yerel gözlemciyle çalışıyor. `/?view=office&motion=preview` veya Ayarlar → Cheleby hareket önizlemesi ile bekleme/yazma seçilebilir. Her iki poz gözlüksüzdür; beklerken bize, yazarken laptopa bakar. Yazarken eller sırayla kalkıp klavyeye basar; iki durum aynı referans ölçeğine hizalanır. Yazmada sandalye/gövde sabit, el/önkol katmanı hareketlidir. Büyük duvar gerçek araç olaylarını ve görünür mesajı gösterir; küçük monitörler ve laptop masanın gerçek çalışma durumuna bağlı dekoratif kod/terminal akışı kullanır. Ajan adları metadata üzerinden gelir. Normal ofiste Bekleme/Yazma artık ana oturumun taze durumundan otomatik seçilir. Kesinti, eskime ve eksik veride son poz donarak korunur; tur bitişi veya girdi bekleme kullanıcıya dönük pozu seçer. Mavi, yeşil ve mor robotlar kendi alt ajanlarının taze durumuna göre bağımsız Bekleme/Yazma hareketi seçer; baş ve önkol hareket ederken gövde ve sandalye sabit kalır. R9'da pembe el maskesine karışan masa parçası ayrıldı; üç robot daha küçük, hızlı ve aralıklı tuş basışlarına geçti. R10 başları büyük bulunduğu için kullanıcı tarafından reddedildi. R11, pembe robotun yuvarlak biçimini örnek alan yeni mavi/yeşil başları yaklaşık %20 daha dar yerleştirir ve görüntü oranını esnetmez. Pembe robot, R9 el ritimleri ve R10 sabit çene düzeltmesi korunur. Manuel önizlemeler ayrı kalır: `/?view=office&robotMotion=preview` veya Ayarlar → Robot hareket önizlemesi. Yeşil robotun boyun/sandalye birleşimi kullanıcı isteğiyle ertelendi. C'de gerçek CLI tamamlama/devam, Desktop alt ajanı yeniden görevlendirme/kesme, ekran tutarlılığı, eskime ve kesinti toparlanması doğrulandı. Gözlem zamanı düzeltmesiyle 55 test, TypeScript ve derleme geçti; Gerçek engelleyici girdi bekleme açık. [C canlı kabul raporu](docs/C_LIVE_OFFICE_ACCEPTANCE_2026-09-13.md). [B2 kaydı](docs/B2_FIXED_OFFICE_WEB_2026-09-12.md) · [B3 kapsamı ve doğrulama](docs/B3_CHELEBY_MOTION_PREVIEW_2026-09-12.md).
 
 [Güncel görsel karar](docs/FIXED_CAMERA_OFFICE_DECISION_2026-09-12.md) · [Ürün planı](docs/CHELEBY_HOME_PLAN.md) · [Yol haritası](docs/CHELEBY_HOME_ROADMAP.md) · [Bağlantı kabulü](docs/CONNECTION_ACCEPTANCE_2026-09-11.md) · [3D ofis kabulü](docs/OFFICE_PROTOTYPE_2026-09-11.md) · [Performans ve Blender](docs/PERFORMANCE_AND_BLENDER_2026-09-12.md)
+
+**D1 r2 canlı Odalar hazır:** Alt panelde proje başlıklarının altında gerçek oturum adları görünür. Gözlenen çalışan/cevap bekleyen odalar ve seçili oda listelenir; seçili oda iş bitince pasif kalır, diğer bitenler gizlenir. Başlık ışığı çalışma varsa yeşildir. Tam arşiv yüklenmez; seçim yenilemede korunur. 66 test, tip kontrolü, derleme ve tarayıcı kontrolleri geçti. [Güncel Odalar kaydı](docs/D1_LIVE_ROOMS_2026-09-13.md).
+
+**Canlı oda keşfi tamamlandı:** Eski tarihli bir oturum yeniden çalışınca, arşiv içerikleri topluca yüklenmeden bulunur. Gerçek Desktop ve CLI aynı anda, oda/ekip ayrımı ve tek oturumun tamamlanmasıyla doğrulandı; 69 test geçti. [Keşif ve gerçek oda kabulü](docs/D_LIVE_DISCOVERY_2026-09-13.md).
+
+
+**Küçük ekranlar:** 14 farklı kod/terminal/dosya görünümü, doğal yazma araları ve masaya bağlı hareket hazır. Duvar canlı akış olarak korunup renklendirildi. [Karar ve doğrulama](docs/MONITOR_ARTWORK_2026-09-13.md).
+
+**Canlı ekran ve Odalar güncellemesi:** Sıralı mesaj/işlem akışı ve büyütme penceresi, cevap gelene kadar kullanıcıya dönük Cheleby ve soru kartı, Türkçe etkinlikler, düzeltilmiş ekran hizası ve kalıcı sürükle-bırak oda sırası hazır. Eski sorular canlı oda sayılmaz. Tarama yayını ve takılan kaynak okumaları için koruma eklendi. [Davranış, sınırlar ve doğrulama](docs/LIVE_FEED_AND_QUESTIONS_2026-09-13.md).
 
 ## Güncel görsel karar ve sıradaki teslim
 
@@ -18,7 +55,15 @@ Son devam noktası: [kapsamlı oturum devir belgesi](.claude/handoffs/2026-09-12
 
 ## Başlatma
 
-Gereksinim: Node.js **24.13 veya daha yeni bir 24.x** sürümü ve npm. Bağımlılıklar kilit dosyasında sabittir. İlk doğrulama Windows üzerinde yapıldı; macOS/Linux çalışma kabulü henüz yapılmadı.
+**Windows'ta tek tık:** masaüstündeki **Cheleby Home** kısayolunu veya proje klasöründeki `Ofisi Ac.cmd` dosyasını aç. Ofis kapalıysa hazırlanıp başlatılır; çalışıyorsa aynı sunucu kullanılır. Terminal penceresi gerekmez. Kısayolu yeniden kurmak için `scripts/install-office-shortcut.ps1` kullanılır. [Davranış, günlükler ve kabul](docs/E1_WINDOWS_LAUNCHER_2026-09-14.md).
+
+Tarayıcıyı kapatmak gözlemciyi durdurmaz; tekrar açılış varsayılan tarayıcıda yeni sekme oluşturabilir. Aşağıdaki komutlar terminalden elle başlatma içindir.
+
+**Tarayıcıdan kontrol:** sağ üstteki güç menüsünden bütün odaların canlı takibini başlatabilir, durdurabilir veya yeniden başlatabilirsin. Durdurduğunda sayfa açık kalır; diğer sekmeler de aynı durumu görür. [Davranış ve kabul](docs/E2_BROWSER_CONTROLS_2026-09-14.md).
+
+**Kapatma ve toparlanma:** `Ofisi Kapat.cmd` veya **Cheleby Home - Kapat** masaüstü kısayolu sunucuyu ve yeniden denemeleri kapatır. Kapatma kısayolu `scripts/install-office-shortcut.ps1 -Stop` ile kurulur. Beklenmedik sunucu kapanışında en fazla üç otomatik deneme yapılır. Tarayıcı sekmesini kapatmak sunucuyu durdurmaz. [E2 davranışı ve sınırlar](docs/E2_RECOVERY_2026-09-14.md).
+
+Gereksinim: Node.js **24.13 veya daha yeni bir 24.x** sürümü ve npm. Bağımlılıklar kilit dosyasında sabittir. Windows ve Ubuntu/WSL üzerinde ölçülen çalışma kabulü yapıldı; diğer Linux ortamları açık, macOS ertelendi.
 
 Proje klasöründe:
 
@@ -31,6 +76,30 @@ npm start
 Tarayıcıda **http://127.0.0.1:4317/** adresini aç. Durdurmak için sunucuyu başlattığın terminalde `Ctrl+C` kullan. Şimdilik derlemede ve başlatmada geliştirme bağımlılıkları da gereklidir; `--omit=dev` kullanma.
 
 Geliştirme sırasında `npm run dev` kullanılabilir. Bu modda kaynaklar Vite üzerinden sunulur; otomatik sıcak yenileme kapalıdır. Web değişikliklerinde sayfayı yenile, gözlemci değişikliklerinde süreci yeniden başlat. Normal `npm start` kullanımında web değişikliklerinden sonra yeniden derle.
+
+## Linux / WSL
+
+**Ubuntu 26.04 / WSL 2 üzerinde ölçülen kapsam doğrulandı.** Yalıtılmış Linux Node 24.13 ortamında 100 test, tip kontrolü, derleme ve Windows Chrome’dan 7 canlı tarayıcı kontrolü geçti. Linux dosya sistemindeki temsili kayıtlar ve Windows’taki gerçek Desktop kaydının WSL’den güncellenerek okunması doğrulandı. Ubuntu’ya global Node/Codex kurulmadı; Linux Codex CLI’nin kendi gerçek oturumu ve diğer dağıtımlar açık, macOS cihaz olmadığı için ertelendi. [Kabul, kanıt ve sınırlar](docs/F2_WSL_ACCEPTANCE_2026-09-17.md).
+
+Linux içinde Node.js 24.13+ (24.x) ve `npm ci` ile kurulmuş ayrı Linux bağımlılıkları gerekir. Windows `node_modules` klasörünü kullanma. Linux proje kopyasını Linux dosya sisteminde tutmak tercih edilir. [WSL dosya sistemi rehberi](https://learn.microsoft.com/en-us/windows/wsl/filesystems).
+
+Linux proje klasöründe, gereksinimler kurulduktan sonra:
+
+```sh
+sh scripts/start-office.sh --port 4327
+sh scripts/start-office.sh --action status --port 4327
+sh scripts/stop-office.sh --port 4327
+```
+
+Başlatıcı JSON yanıtındaki URL’yi Windows tarayıcısında aç; örnekte `http://127.0.0.1:4327/`. 4327, Windows ofisinin 4317 portundan ayrı test içindir. Betikler tarayıcı açmaz ve paket kurmaz. [Windows’tan WSL uygulamasına localhost erişimi](https://learn.microsoft.com/en-us/windows/wsl/networking#accessing-linux-networking-apps-from-windows-localhost).
+
+Varsayılan kaynak Linux kullanıcısının `CODEX_HOME` / `~/.codex` dizinidir. Windows ve Linux kayıtları otomatik birleştirilmez. Windows kaynağını WSL’den salt okunur izlemek için, yalnızca bu kaynağı istediğinde:
+
+```sh
+CHELEBY_CODEX_HOME='/mnt/c/Users/muham/.codex' sh scripts/start-office.sh --port 4327
+```
+
+Çalışan sunucu tekrar kullanılır; kaynak değişikliği için önce aynı portu durdurup yeni değişkenle aç. Linux başlatıcı testleri `test/launcher.linux.test.ts` içindedir; Windows’ta bu test açıkça atlanır. Bu test grubu Ubuntu/WSL’de geçti; diğer Linux ortamları için ayrıca gerçek kabul gerekir. Linux denetim kanalı kullanıcıya özel anahtarla doğrulanan soyut Unix soketidir; normal kapanışta veya süreç kaybında eski soket dosyası bırakmaz.
 
 ## Yapılandırma
 
@@ -70,11 +139,11 @@ Aşağıdaki kamera, model ve dar ekran davranışları mevcut v0.2 uygulamasın
 
 ## Veri sınırları
 
-Gözlemci yalnızca kayıt okur, Codex'e komut göndermez. Web sunucusu `127.0.0.1` adresine bağlanır; yerel oturum çerezi ve kaynak kontrolü kullanır. Ham kullanıcı mesajı, modelin iç muhakemesi, talimatlar ve araç girdisi/çıktısı tarayıcıya aktarılmaz. Görünür asistan mesajlarında sık rastlanan erişim bilgisi kalıpları maskelenir; bu tam anonimleştirme değildir.
+Gözlemci yalnızca kayıt okur, Codex'e komut göndermez. Web sunucusu `127.0.0.1` adresine bağlanır; yerel oturum çerezi ve kaynak kontrolü kullanır. Ham kullanıcı mesajı, modelin iç muhakemesi, talimatlar ve ham araç girdisi/çıktısı tarayıcıya aktarılmaz. Görünür soru metinleri ile izin verilen komut/dosya alanlarının sınırlı önizlemeleri canlı ekrana taşınır; dosya değiştirme gövdeleri ve tam araç çıktıları gösterilmez. Görünür asistan mesajlarında sık rastlanan erişim bilgisi kalıpları maskelenir; bu tam anonimleştirme değildir.
 
 Sayaçlar **okunan kayıt aralığını** temsil eder. Başlangıçta büyük dosyanın metadata satırı ve son 2 MiB'ı okunur; kesilen geçmiş işaretlenir. Oturum başına en çok 120 yakın olay tutulur. Yeni keşif son 7 oluşturulma günüyle sınırlıdır; önceden izlenen daha eski dosyalar süreç içinde izlenmeye devam eder. Daha eski, hâlâ kullanılan bir oturum görünmüyorsa gün sınırını artır.
 
-`Tur bitti`, oturumun kapandığı anlamına gelmez. Eski bir kayıttaki `Çalışıyor` etiketi de sürecin hâlâ çalıştığının kanıtı değildir; güncellik uyarısı bu ayrımı gösterir. Araç sonucunun başarı/hata içeriği, test toplamı, maliyet ve ilerleme yüzdesi çıkarılmaz. Sarmalanmış çağrılarda yalnızca sarmalayıcı adı görünebilir.
+`Tur bitti`, oturumun kapandığı anlamına gelmez. Eski bir kayıttaki `Çalışıyor` etiketi de sürecin hâlâ çalıştığının kanıtı değildir; güncellik uyarısı bu ayrımı gösterir. Araç sonucunun başarı/hata içeriği, test toplamı, maliyet ve ilerleme yüzdesi çıkarılmaz. Sarmalanmış çağrılarda statik olarak okunabilen araç ve dosya/komut özetleri gösterilir; dinamik veya desteklenmeyen içerikte genel etkinlik etiketi kalır.
 
 Geçmiş şu an bellektedir. Gözlemci yeniden başlayınca mevcut dosya penceresinden tekrar kurulur; önceki olay sayılarının aynen korunması garanti edilmez. Kalıcı veritabanı, replay ve kaynak sürümlerini kapsayan kararlılık çalışması yol haritasındadır.
 

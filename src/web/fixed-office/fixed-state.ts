@@ -15,7 +15,13 @@ export function freshness(
   if (connection !== 'connected') return 'offline';
   if (!session.recordAvailable) return 'unavailable';
   const time = Date.parse(session.lastEventAt);
-  if (!Number.isFinite(time) || now - time > STALE_AFTER_MS) return 'stale';
+  if (!Number.isFinite(time)) return 'stale';
+  // An observed unanswered question remains pending while its source is available.
+  // Silence is normal while the user is considering the answer.
+  // A dormant historic question is retained for the selected room, but must not
+  // keep an old project in the live list indefinitely.
+  if (session.pendingQuestions?.length && now - time <= 24 * 60 * 60 * 1000) return 'current';
+  if (now - time > STALE_AFTER_MS) return 'stale';
   return 'current';
 }
 export function fixedOfficeState(snapshot: ObserverSnapshot | null, selectedId: string | null) {
@@ -28,7 +34,9 @@ export function fixedOfficeState(snapshot: ObserverSnapshot | null, selectedId: 
       : selected.agentKind === 'subagent' && selected.parentResolved
         ? mains.find((s) => s.id === selected.rootId)
         : undefined
-    : mains[0];
+    : selectedId
+      ? undefined
+      : mains[0];
   const team = root
     ? sessions
         .filter((s) => s.agentKind === 'subagent' && s.parentResolved && s.rootId === root.id)
