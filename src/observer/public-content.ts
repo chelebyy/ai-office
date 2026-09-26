@@ -29,8 +29,10 @@ export function jsonObject(value: unknown): Data {
   }
 }
 
+const questionTool = /(?:^|[.:])(?:request_user_input|ask_user)(?:_async)?$/i;
+
 export function questionsFromCall(name: string, args: unknown, callId: string): PendingQuestion[] {
-  if (!/(?:^|[.:])(?:request_user_input|ask_user)(?:_async)?$/i.test(name)) return [];
+  if (!questionTool.test(name)) return [];
   const questions = jsonObject(args).questions;
   if (!Array.isArray(questions)) return [];
   return questions.slice(0, 3).flatMap((value, index) => {
@@ -88,7 +90,7 @@ export function answeredQuestionIds(message: string): Set<string> {
         try {
           const id: unknown = JSON.parse(string(reply.questionItemId));
           return Array.isArray(id) &&
-            /^(?:request_user_input|ask_user)(?:_async)?$/.test(string(id[0])) &&
+            questionTool.test(string(id[0])) &&
             /^[\w.:-]{1,160}$/.test(string(id[1])) &&
             Number.isInteger(id[2]) &&
             id[2] >= 0 &&

@@ -142,6 +142,34 @@ test('fresh old children recover explicit dormant parents within the read budget
   assert.equal(snap.scan.files, 2);
 });
 
+test('a family discovered at the budget boundary is promoted next scan without extra reads', async t => {
+  const source = await temporarySource(); t.after(() => source.cleanup());
+  const oldDay = path.join(source.root, 'sessions', '2025', '12', '01');
+  await mkdir(oldDay, { recursive: true });
+  const parent = path.join(oldDay, 'rollout-parent.jsonl');
+  const child = path.join(oldDay, 'rollout-child.jsonl');
+  const oldTime = new Date('2025-12-01T10:00:00Z');
+  await writeFile(parent, jsonl(metadata('parent')));
+  await writeFile(child, jsonl(metadata('child', {
+    source: { subagent: { thread_spawn: { parent_thread_id: 'parent' } } },
+  })));
+  const unrelated = await source.record('unrelated', jsonl(metadata('unrelated')));
+  await utimes(parent, oldTime, oldTime);
+  await utimes(child, new Date(NOW), new Date(NOW));
+  const newer = new Date(Date.parse(NOW) + 1000);
+  await utimes(unrelated, newer, newer);
+  const observer = new CodexObserver({ codexHome: source.root, maxFiles: 2, now: () => new Date(NOW) });
+  await observer.scanOnce();
+  assert.equal(observer.snapshot().scan.files, 2);
+  assert.equal(observer.snapshot().sessions.find(s => s.id === 'child')?.parentResolved, false);
+  await observer.scanOnce();
+  const next = observer.snapshot();
+  assert.equal(next.scan.files, 2);
+  assert.equal(next.sessions.find(s => s.id === 'child')?.parentResolved, true);
+  assert.equal(next.sessions.find(s => s.id === 'parent')?.recordAvailable, true);
+  assert.equal(next.sessions.find(s => s.id === 'child')?.recordAvailable, true);
+});
+
 test('file modification time discovers candidates but never fabricates working status', async t => {
   const source = await temporarySource(); t.after(() => source.cleanup());
   const oldDay = path.join(source.root, 'sessions', '2025', '12', '01');

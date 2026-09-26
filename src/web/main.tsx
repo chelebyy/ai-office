@@ -423,7 +423,7 @@ function App() {
       <footer>
         <span>{t.privacy}</span>
         <span>
-          CHELEBY HOME <span className="footer-version">v0.2</span>
+          AI OFFICE <span className="footer-version">v0.2</span>
         </span>
       </footer>
     </div>

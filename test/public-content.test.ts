@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { RecordReducer } from '../src/observer/parser.ts';
-import { toolActions, publicText } from '../src/observer/public-content.ts';
+import { toolActions, publicText, answeredQuestionIds, questionsFromCall } from '../src/observer/public-content.ts';
 import { INITIAL_MOTION_POSE, liveMotion } from '../src/web/fixed-office/live-motion.ts';
 import { freshness } from '../src/web/fixed-office/fixed-state.ts';
 import { activityLabel, toolLabel } from '../src/web/fixed-office/activity-labels.ts';
@@ -13,6 +13,21 @@ function reducer() {
   r.accept(event('task_started', { turn_id: 'turn-1' }), NOW);
   return r;
 }
+
+test('structured question replies accept the same qualified tool names as questions', () => {
+  for (const name of ['functions.request_user_input_async', 'tools:ask_user', 'REQUEST_USER_INPUT']) {
+    const questions = questionsFromCall(name, JSON.stringify({ questions: [{ title: 'Choose' }] }), 'q');
+    assert.equal(questions.length, 1);
+    const message = '<send_user_message_question_reply>' + JSON.stringify([{
+      questionItemId: JSON.stringify([name, 'q', 0]), answer: 'A',
+    }]) + '</send_user_message_question_reply>';
+    assert.deepEqual([...answeredQuestionIds(message)], [questions[0].id]);
+  }
+  const invalid = '<send_user_message_question_reply>' + JSON.stringify([{
+    questionItemId: JSON.stringify(['functions.unrelated_tool', 'q', 0]), answer: 'A',
+  }]) + '</send_user_message_question_reply>';
+  assert.equal(answeredQuestionIds(invalid).size, 0);
+});
 function ask(r: RecordReducer, name = 'request_user_input_async', callId = 'q1') {
   r.accept(
     row('response_item', {

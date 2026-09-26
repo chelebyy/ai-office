@@ -182,7 +182,7 @@ export function OfficeView({
             />
           </Suspense>
           <div className="world-corner-note">
-            <span>CHELEBY HOME</span>
+            <span>AI OFFICE</span>
             <small>{t.prototype}</small>
           </div>
           {settings && (

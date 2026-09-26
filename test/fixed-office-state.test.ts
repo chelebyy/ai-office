@@ -1,8 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import type { ObserverSnapshot, SessionView } from '../src/shared/contract.ts';
+import { roomFeed } from '../src/web/fixed-office/room-feed.ts';
 import {
   fixedOfficeState,
+  restoredRoomId,
   freshness,
   latestMessage,
   toolEvents,
@@ -48,6 +50,37 @@ function session(id: string, extra: Partial<SessionView> = {}): SessionView {
   };
 }
 const snapshot = (sessions: SessionView[]) => ({ sessions }) as ObserverSnapshot;
+test('room feed includes team activity without sharing call receipts or leaking other rooms', () => {
+  const root = session('root');
+  const child = session('child', { agentKind: 'subagent', rootId: 'root' });
+  const foreign = session('foreign', { agentKind: 'subagent', rootId: 'other' });
+  const event = { id: 'same-id', sessionId: 'root', kind: 'tool_started' as const, occurredAt: new Date(now).toISOString(), observedAt: new Date(now).toISOString(), callId: 'same-call', toolName: 'test' };
+  root.events = [event];
+  child.events = [{ ...event, sessionId: 'child' }, { ...event, sessionId: 'child', id: 'receipt', kind: 'tool_completed' }];
+  foreign.events = [{ ...event, sessionId: 'foreign' }];
+  const feed = roomFeed(root, [root, child, foreign]);
+  assert.equal(feed.length, 2);
+  assert.equal(new Set(feed.map(e => e.key)).size, 2);
+  assert.equal(feed.find(e => e.session.id === root.id)?.returned, false);
+  assert.equal(feed.find(e => e.session.id === child.id)?.returned, true);
+  assert.equal(roomFeed(undefined, [child]).length, 0);
+});
+test('startup restores an absent persisted room only after a completed scan with an available main', () => {
+  const ready = { ...snapshot([session('available')]), scan: { status: 'ready' } } as ObserverSnapshot;
+  assert.equal(restoredRoomId(null, 'old'), null);
+  assert.equal(restoredRoomId({ ...ready, scan: { ...ready.scan, status: 'starting' } }, 'old'), null);
+  assert.equal(restoredRoomId({ ...ready, sessions: [] }, 'old'), null);
+  assert.equal(restoredRoomId(ready, 'old'), 'available');
+  // During live observation, a missing selection still cannot impersonate another room.
+  assert.equal(fixedOfficeState(ready, 'old').root, undefined);
+  for (const agentKind of ['subagent', 'internal'] as const) {
+    const explicit = { ...ready, sessions: [...ready.sessions, session('selected', {
+      agentKind, parentResolved: false,
+    })] };
+    assert.equal(restoredRoomId(explicit, 'selected'), 'selected');
+    assert.equal(fixedOfficeState(explicit, 'selected').root, undefined);
+  }
+});
 test('project navigation groups all main sessions by identity and includes only resolved team activity', () => {
   const mains = Array.from({ length: 7 }, (_, i) =>
     session('main-' + i, {

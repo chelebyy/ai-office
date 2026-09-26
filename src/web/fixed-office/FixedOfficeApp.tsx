@@ -10,6 +10,7 @@ import OfficeArtwork, { actorName, stateLabel } from './OfficeArtwork.tsx';
 import { characters, type CharacterId } from './scene-layout.ts';
 import {
   fixedOfficeState,
+  restoredRoomId,
   freshness,
   latestMessage,
   remember,
@@ -40,6 +41,7 @@ export default function FixedOfficeApp() {
   const runtimePaused = Boolean(runtime && runtime.state !== 'running');
   const paused = viewPaused || runtimePaused;
   const [selectedId, setSelectedId] = useState(() => stored('cheleby.selected', ''));
+  const selectionRestored = useRef(false);
   const [dialog, setDialog] = useState<Dialog>(null);
   const [labels, setLabels] = useState(true);
   const [screens, setScreens] = useState(true);
@@ -126,14 +128,16 @@ export default function FixedOfficeApp() {
   }, [dialog]);
 
   useEffect(() => {
-    // Lock the first resolved room instead of following the most recent event.
-    if (!selectedId && office.root) {
-      setSelectedId(office.root.id);
-      remember('cheleby.selected', office.root.id);
-    }
-  }, [selectedId, office.root?.id]);
+    if (selectionRestored.current) return;
+    const restored = restoredRoomId(snapshot, selectedId);
+    if (restored === null) return;
+    selectionRestored.current = true;
+    setSelectedId(restored);
+    remember('cheleby.selected', restored);
+  }, [selectedId, snapshot]);
 
   function chooseSession(s: SessionView) {
+    selectionRestored.current = true;
     setSelectedId(s.id);
     remember('cheleby.selected', s.id);
     setDialog(null);
@@ -141,6 +145,7 @@ export default function FixedOfficeApp() {
   function chooseActor(id: CharacterId) {
     const s = office.actors[id];
     if (s) {
+      selectionRestored.current = true;
       setSelectedId(s.id);
       remember('cheleby.selected', s.id);
     }
@@ -290,6 +295,7 @@ export default function FixedOfficeApp() {
           onOpenWeather={() => setDialog({ kind: location ? 'settings' : 'location' })}
           theme={theme}
           actors={office.actors}
+          members={office.members}
           activeId={selected?.id}
           locale={locale}
           copy={copy}
@@ -349,6 +355,7 @@ export default function FixedOfficeApp() {
             <WallFeed
               expanded
               session={office.root}
+              members={office.members}
               locale={locale}
               state={stateLabel(office.root, stateProps)}
             />
@@ -487,7 +494,7 @@ export default function FixedOfficeApp() {
       >
         <div className="fo-dialog-content">
           <header>
-            <span className="fo-eyebrow">CHELEBY HOME</span>
+            <span className="fo-eyebrow">AI OFFICE</span>
             <button onClick={closeDialog} aria-label={copy.close}>
               <Icon name="close" />
             </button>
@@ -524,6 +531,7 @@ export default function FixedOfficeApp() {
             <WallFeed
               expanded
               session={office.root}
+              members={office.members}
               locale={locale}
               state={stateLabel(office.root, stateProps)}
             />

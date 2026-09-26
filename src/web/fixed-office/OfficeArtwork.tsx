@@ -43,6 +43,7 @@ export type ArtworkProps = {
   onOpenWeather: () => void;
   theme: OfficeTheme;
   actors: Record<CharacterId, SessionView | undefined>;
+  members: SessionView[];
   activeId?: string;
   locale: Locale;
   copy: OfficeCopy;
@@ -324,6 +325,7 @@ export default function OfficeArtwork(props: ArtworkProps) {
                         {m.wall ? (
                           <WallFeed
                             session={actors.main}
+                            members={props.members}
                             locale={locale}
                             state={stateLabel(actors.main, props)}
                             onCustomize={actors.main ? props.onCustomize : undefined}

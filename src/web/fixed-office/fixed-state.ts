@@ -24,6 +24,13 @@ export function freshness(
   if (now - time > STALE_AFTER_MS) return 'stale';
   return 'current';
 }
+/** Reconcile a persisted ID once at startup, never a live user's selection. */
+export function restoredRoomId(snapshot: ObserverSnapshot | null, selectedId: string): string | null {
+  if (snapshot?.scan.status !== 'ready') return null;
+  if (snapshot.sessions.some(session => session.id === selectedId)) return selectedId;
+  return snapshot.sessions.find(session => session.agentKind === 'main')?.id ?? null;
+}
+
 export function fixedOfficeState(snapshot: ObserverSnapshot | null, selectedId: string | null) {
   const sessions = snapshot?.sessions ?? [];
   const mains = sessions.filter((s) => s.agentKind === 'main');

@@ -21,3 +21,10 @@ running instances.
 The application is installed locally from source; a static web deployment
 alone cannot read local Codex records. CI validates Windows and Linux builds.
 Release automation publishes source releases after those checks pass.
+
+Optional title-index I/O shares a bounded deadline. If a child's parent is
+discovered only after the scan's file budget is consumed, that family is
+prioritized on the next scan; the file-read cap is never exceeded.
+Startup may replace an absent persisted room with an available room. A room
+selected during the current visit is never silently replaced by another
+project when its data disappears. Ambient pets remain intentionally disabled.

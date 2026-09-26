@@ -1,27 +1,33 @@
 import { open } from 'node:fs/promises';
 import path from 'node:path';
 import { publicText } from './parser.ts';
+import { ioDeadline } from './io-deadline.ts';
 
 // This optional public index contains names, not event or execution state.
 export class SessionTitles {
   private signature = '';
   private names = new Map<string, string>();
-  constructor(private codexHome: string) {}
+  private retryAfter = 0;
+  constructor(private codexHome: string, private timeoutMs = 1500) {}
 
   get(id: string): string | null { return this.names.get(id) ?? null; }
 
   async refresh(): Promise<void> {
+    if (Date.now() < this.retryAfter) return;
     let handle;
+    const deadline = Date.now() + this.timeoutMs;
+    const bounded = <T>(work: Promise<T>) => ioDeadline(work, Math.max(1, deadline - Date.now()));
     try {
-      handle = await open(path.join(this.codexHome, 'session_index.jsonl'), 'r');
-      const info = await handle.stat();
+      handle = await ioDeadline(open(path.join(this.codexHome, 'session_index.jsonl'), 'r'),
+        this.timeoutMs, late => { void late.close().catch(() => {}); });
+      const info = await bounded(handle.stat());
       const signature = `${info.ino}:${info.size}:${info.mtimeMs}`;
       if (signature === this.signature) return;
       const start = Math.max(0, info.size - 4 * 1024 * 1024);
       const buffer = Buffer.alloc(info.size - start);
       let offset = 0;
       while (offset < buffer.length) {
-        const { bytesRead } = await handle.read(buffer, offset, buffer.length - offset, start + offset);
+        const { bytesRead } = await bounded(handle.read(buffer, offset, buffer.length - offset, start + offset));
         if (!bytesRead) break;
         offset += bytesRead;
       }
@@ -43,8 +49,12 @@ export class SessionTitles {
       }
       this.names = new Map([...latest].map(([id, value]) => [id, value.title]));
       this.signature = signature;
-    } catch {
+    } catch (error) {
       this.names.clear(); this.signature = '';
-    } finally { await handle?.close(); }
+      if ((error as NodeJS.ErrnoException).code === 'ETIMEDOUT')
+        this.retryAfter = Date.now() + 30000;
+    } finally {
+      if (handle) await bounded(handle.close()).catch(() => {});
+    }
   }
 }

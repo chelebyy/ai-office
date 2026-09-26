@@ -39,6 +39,7 @@ export class CodexObserver extends EventEmitter {
   private now: () => Date;
   private files = new Map<string, FileState>();
   private retryAfter = new Map<string, number>();
+  private familyPriority = new Set<string>();
   private titles: SessionTitles;
   private timer: ReturnType<typeof setTimeout> | null = null;
   private stopped = true;
@@ -175,8 +176,22 @@ export class CodexObserver extends EventEmitter {
           ? discovery.catalog.find(file => file.filename === cachedParent[0])
           : discovery.catalog.find(file => path.basename(file.filename).endsWith('-' + parentId + '.jsonl'));
         // Explicit parent dependencies take priority over unrelated recent history, within the same cap.
-        if (parent) await readFamily(parent);
+        if (parent) {
+          if (!attempted.has(parent.filename) && attempted.size >= this.maxFiles) {
+            // The dependency was unknown before reading this child. Promote the
+            // family on the next scan instead of exceeding the strict I/O cap
+            // or starving it behind the same unrelated candidates forever.
+            this.familyPriority.add(parent.filename);
+            this.familyPriority.add(candidate.filename);
+          } else await readFamily(parent);
+        }
       };
+      const priority = this.familyPriority;
+      this.familyPriority = new Set();
+      for (const filename of priority) {
+        const candidate = discovery.catalog.find(file => file.filename === filename);
+        if (candidate) await readFamily(candidate);
+      }
       for (const candidate of discovery.candidates) await readFamily(candidate);
       // Keep a bounded last-known view for sources that disappeared.
       if (this.files.size > this.maxFiles * 2) {

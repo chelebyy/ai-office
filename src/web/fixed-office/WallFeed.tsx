@@ -1,23 +1,11 @@
 import { Fragment, useLayoutEffect, useRef, useState } from 'react';
-import type { Locale, ObservationEvent, SessionView } from '../../shared/contract.ts';
+import type { Locale, SessionView } from '../../shared/contract.ts';
 import { safeTime } from './fixed-state.ts';
 import { actionLabel, toolLabel } from './activity-labels.ts';
 import { ProjectName } from './RoomIdentity.tsx';
 import { sessionTitle } from './office-rooms.ts';
+import { roomFeed } from './room-feed.ts';
 import './wall-feed.css';
-
-export function visibleFeed(events: ObservationEvent[]) {
-  return events
-    .filter(
-      (e) =>
-        e.kind === 'assistant_message' ||
-        e.kind === 'tool_started' ||
-        e.kind === 'waiting' ||
-        e.kind === 'turn_completed' ||
-        e.kind === 'turn_aborted',
-    )
-    .slice(-80);
-}
 
 function Message({ text }: { text: string }) {
   return (
@@ -43,12 +31,14 @@ function Message({ text }: { text: string }) {
 
 export function WallFeed({
   session,
+  members,
   locale,
   state,
   expanded = false,
   onCustomize,
 }: {
   session?: SessionView;
+  members?: SessionView[];
   locale: Locale;
   state: string;
   expanded?: boolean;
@@ -59,16 +49,15 @@ export function WallFeed({
   const follow = useRef(true);
   const autoScrollTop = useRef<number | null>(null);
   const [following, setFollowing] = useState(true);
-  const allEvents = visibleFeed(session?.events ?? []);
+  const allEvents = roomFeed(session, members);
   const lastMessage = allEvents.findLastIndex((e) => e.kind === 'assistant_message');
   const events = expanded
     ? allEvents
     : allEvents.filter((_, index) => index === lastMessage || index === allEvents.length - 1);
-  const revision = session?.events.at(-1)?.id;
-  const completed = new Set(
-    session?.events.filter((e) => e.kind === 'tool_completed' && e.callId).map((e) => e.callId),
-  );
-  const pending = new Set(session?.pendingQuestions?.map((q) => q.id));
+  const revision = allEvents.at(-1)?.key;
+  const author = (source: SessionView) => source.agentKind === 'main'
+    ? (tr ? 'Ana oturum' : 'Main session')
+    : source.agentName || source.agentTask || (tr ? 'Ajan' : 'Agent');
   useLayoutEffect(() => {
     follow.current = true;
     setFollowing(true);
@@ -96,7 +85,7 @@ export function WallFeed({
     >
       <header className="fo-feed-heading">
         <div>
-          <span className="fo-feed-eyebrow">CHELEBY / {tr ? 'CANLI AKIŞ' : 'LIVE FEED'}</span>
+          <span className="fo-feed-eyebrow">AI OFFICE / {tr ? 'CANLI AKIŞ' : 'LIVE FEED'}</span>
           {onCustomize ? (
             <button
               className="fo-feed-project-button"
@@ -150,11 +139,11 @@ export function WallFeed({
           </p>
         )}
         {events.map((e) => (
-          <article key={e.id} className={`fo-feed-entry fo-feed-${e.kind}`} data-feed-kind={e.kind}>
+          <article key={e.key} className={`fo-feed-entry fo-feed-${e.kind}`} data-feed-kind={e.kind}>
             {e.kind === 'assistant_message' ? (
               <>
                 <div className="fo-feed-meta">
-                  <b>Cheleby</b>
+                  <b>{author(e.session)}</b>
                   <time>{safeTime(e.occurredAt, locale)}</time>
                 </div>
                 <div className="fo-feed-message">
@@ -183,9 +172,9 @@ export function WallFeed({
               <>
                 <div className="fo-feed-operation">
                   <span className="fo-feed-operation-icon">{e.questions?.length ? '?' : '›_'}</span>
-                  <b>{toolLabel(e.toolName, locale)}</b>
+                  <b>{author(e.session)} · {toolLabel(e.toolName, locale)}</b>
                   <span className="fo-feed-receipt">
-                    {completed.has(e.callId)
+                    {e.returned
                       ? tr
                         ? 'Yanıt alındı'
                         : 'Returned'
@@ -216,7 +205,7 @@ export function WallFeed({
                 {e.questions?.map((q) => (
                   <div className="fo-feed-question" key={q.id}>
                     <b>
-                      {pending.has(q.id)
+                      {e.pending.has(q.id)
                         ? tr
                           ? 'Yanıtını bekliyor'
                           : 'Awaiting your answer'
