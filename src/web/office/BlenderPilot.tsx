@@ -127,7 +127,7 @@ export default function BlenderPilot() {
   const [metrics, setMetrics] = useState<SceneMetrics | null>(null);
   const markReady = useMemo(() => () => setReady(true), []);
   useEffect(() => {
-    document.title = 'Cheleby Home · Blender önizleme';
+    document.title = 'AI Office · Blender önizleme';
     document.documentElement.lang = 'tr';
     const visibility = () => setHidden(document.hidden);
     document.addEventListener('visibilitychange', visibility);
@@ -137,7 +137,7 @@ export default function BlenderPilot() {
 
   return <div className="pilot-page">
     <header className="pilot-header">
-      <a href="/" className="pilot-brand" aria-label="Cheleby Home ana sayfa"><span className="pilot-logo">⌂</span> cheleby <span>home</span></a>
+      <a href="/" className="pilot-brand" aria-label="AI Office ana sayfa"><span className="pilot-logo">⌂</span> AI <span>Office</span></a>
       <div className="pilot-breadcrumb"><span>Stüdyo</span><i>/</i> Blender önizleme</div>
       <a href="/" className="pilot-back">Ofise dön <span aria-hidden="true">↗</span></a>
     </header>

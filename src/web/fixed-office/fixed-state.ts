@@ -15,9 +15,22 @@ export function freshness(
   if (connection !== 'connected') return 'offline';
   if (!session.recordAvailable) return 'unavailable';
   const time = Date.parse(session.lastEventAt);
-  if (!Number.isFinite(time) || now - time > STALE_AFTER_MS) return 'stale';
+  if (!Number.isFinite(time)) return 'stale';
+  // An observed unanswered question remains pending while its source is available.
+  // Silence is normal while the user is considering the answer.
+  // A dormant historic question is retained for the selected room, but must not
+  // keep an old project in the live list indefinitely.
+  if (session.pendingQuestions?.length && now - time <= 24 * 60 * 60 * 1000) return 'current';
+  if (now - time > STALE_AFTER_MS) return 'stale';
   return 'current';
 }
+/** Reconcile a persisted ID once at startup, never a live user's selection. */
+export function restoredRoomId(snapshot: ObserverSnapshot | null, selectedId: string): string | null {
+  if (snapshot?.scan.status !== 'ready') return null;
+  if (snapshot.sessions.some(session => session.id === selectedId)) return selectedId;
+  return snapshot.sessions.find(session => session.agentKind === 'main')?.id ?? null;
+}
+
 export function fixedOfficeState(snapshot: ObserverSnapshot | null, selectedId: string | null) {
   const sessions = snapshot?.sessions ?? [];
   const mains = sessions.filter((s) => s.agentKind === 'main');
@@ -28,7 +41,9 @@ export function fixedOfficeState(snapshot: ObserverSnapshot | null, selectedId: 
       : selected.agentKind === 'subagent' && selected.parentResolved
         ? mains.find((s) => s.id === selected.rootId)
         : undefined
-    : mains[0];
+    : selectedId
+      ? undefined
+      : mains[0];
   const team = root
     ? sessions
         .filter((s) => s.agentKind === 'subagent' && s.parentResolved && s.rootId === root.id)
@@ -58,6 +73,10 @@ export function fixedOfficeState(snapshot: ObserverSnapshot | null, selectedId: 
     { turns: 0, starts: 0, results: 0, events: 0 },
   );
   return { root, mains, team, actors, members, events, counts };
+}
+export function sessionName(session: SessionView | undefined, fallback: string) {
+  if (session?.agentKind === 'main') return 'Cheleby';
+  return session?.agentName?.trim() || session?.agentTask?.trim() || fallback;
 }
 export function latestMessage(session?: SessionView) {
   return session?.events.findLast((e) => e.kind === 'assistant_message' && e.text)?.text;

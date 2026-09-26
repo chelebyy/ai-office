@@ -1,0 +1,100 @@
+.fo-room-identity-preview {
+  border: 1px solid #3c515c;
+  border-radius: 6px;
+  padding: 22px 24px;
+  background: linear-gradient(125deg, #17262b, #0a1218);
+  margin-bottom: 16px;
+}
+.fo-room-identity-preview > span {
+  display: block;
+  font-size: 10px;
+  line-height: 1.1;
+  letter-spacing: 0.12em;
+  color: #b1bec5;
+}
+.fo-room-identity-preview > strong {
+  display: block;
+  margin-top: 10px;
+  font-size: 25px;
+  line-height: 1.3;
+  color: var(--room-accent);
+  overflow-wrap: anywhere;
+}
+.fo-room-identity-preview > i {
+  display: block;
+  width: 44px;
+  height: 2px;
+  margin-top: 16px;
+  background: var(--room-accent);
+}
+.fo-room-swatches {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+  margin: 20px 0;
+}
+.fixed-office .fo-room-swatches > button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 4px;
+  min-height: 84px;
+  border: 1px solid #2c424e;
+  border-radius: 6px;
+  background: #101e29;
+  color: #c3d1dc;
+  font-size: 12px;
+}
+.fixed-office .fo-room-swatches > button:hover {
+  background: #1a303e;
+}
+.fixed-office .fo-room-swatches > button[aria-pressed='true'] {
+  border-color: var(--swatch);
+  background: color-mix(in srgb, var(--swatch) 12%, #0c1923);
+}
+.fo-room-swatches i {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--swatch);
+  color: #10232c;
+  font-style: normal;
+  font-weight: 700;
+}
+.fo-room-identity-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.fixed-office .fo-room-identity-footer > button,
+.fixed-office .fo-room-customize {
+  padding: 9px 12px;
+  min-height: 38px;
+  border: 1px solid #3b5565;
+  border-radius: 5px;
+  color: #d2e3ed;
+  background: #132631;
+}
+.fo-room-identity-footer > span {
+  color: #95adbd;
+  font-size: 12px;
+}
+.fo-room-customize {
+  margin-bottom: 12px;
+}
+@media (max-width: 600px) {
+  .fo-room-swatches {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .fo-room-identity-preview {
+    padding: 16px;
+  }
+  .fo-room-identity-preview > strong {
+    font-size: 20px;
+  }
+}

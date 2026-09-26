@@ -1,4 +1,5 @@
 import type { EventKind, Locale, SessionStatus } from '../shared/contract.ts';
+import { preferredBrowserLocale } from './locale.ts';
 const en = {
   studio: 'Connection studio',
   phase: 'FIRST BUILD · 0 + A',
@@ -31,7 +32,7 @@ const en = {
   select: 'Choose a session to see its observed events.',
   noSessions: 'No sessions in this view',
   noSessionsBody: 'Try another source filter, or start a Codex session.',
-  missing: 'Session folder not found. Set CHELEBY_CODEX_HOME if Codex uses another profile.',
+  missing: 'Session folder not found. Set AI_OFFICE_CODEX_HOME if Codex uses another profile.',
   scanError: 'The source could not be checked. Last known state is preserved.',
   emptyEvents: 'No public events in this record window yet.',
   observed: 'Last observed state',
@@ -47,6 +48,9 @@ const en = {
   locale: 'Interface language',
   localeSession: 'from session messages',
   localeBrowser: 'from browser',
+  localePreference: 'your preference',
+  loading: 'Opening office…',
+  blenderPreview: 'Blender preview ↗',
   fallback:
     'This prototype includes English and Turkish. Other browser languages fall back to English.',
   support: 'The office view is powered by this same local observer.',
@@ -115,7 +119,7 @@ const tr: Dictionary = {
   noSessions: 'Bu görünümde oturum yok',
   noSessionsBody: 'Başka kaynak filtresi seçebilir veya Codex oturumu açabilirsin.',
   missing:
-    'Oturum klasörü bulunamadı. Codex başka profil kullanıyorsa CHELEBY_CODEX_HOME ayarlanabilir.',
+    'Oturum klasörü bulunamadı. Codex başka profil kullanıyorsa AI_OFFICE_CODEX_HOME ayarlanabilir.',
   scanError: 'Kaynak kontrol edilemedi. Bilinen son durum korunuyor.',
   emptyEvents: 'Bu kayıt aralığında henüz görünür olay yok.',
   observed: 'Gözlenen son durum',
@@ -131,6 +135,9 @@ const tr: Dictionary = {
   locale: 'Arayüz dili',
   localeSession: 'oturum mesajlarından',
   localeBrowser: 'tarayıcıdan',
+  localePreference: 'senin tercihin',
+  loading: 'Ofis açılıyor…',
+  blenderPreview: 'Blender önizleme ↗',
   fallback:
     'Bu prototipte Türkçe ve İngilizce var. Diğer tarayıcı dillerinde İngilizce kullanılır.',
   support: 'Ofis görünümü aynı yerel gözlemciyle beslenir.',
@@ -167,7 +174,9 @@ const tr: Dictionary = {
 };
 export const dictionaries = { en, tr };
 export function browserLocale(): Locale {
-  return navigator.languages[0]?.toLowerCase().startsWith('tr') ? 'tr' : 'en';
+  return preferredBrowserLocale(
+    navigator.languages?.length ? navigator.languages : [navigator.language],
+  );
 }
 export const eventLabels: Record<Locale, Record<EventKind, string>> = {
   tr: {

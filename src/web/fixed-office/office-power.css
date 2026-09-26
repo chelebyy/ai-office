@@ -1,0 +1,107 @@
+.fo-power {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 18;
+  color: #d6e8f2;
+}
+.fo-power-trigger {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 44px;
+  min-height: 40px;
+  justify-content: center;
+  padding: 8px 11px;
+  border: 1px solid #436071;
+  border-radius: 8px;
+  background: #0b1a23ed;
+  color: #a7d9ed;
+  cursor: pointer;
+  box-shadow: 0 3px 14px #0004;
+}
+.fo-power-trigger:hover {
+  background: #162f3b;
+}
+.fo-power-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #7d8c96;
+}
+.fo-power[data-state='running'] .fo-power-dot {
+  background: #5cd7bb;
+}
+.fo-power[data-state='starting'] .fo-power-dot,
+.fo-power[data-state='stopping'] .fo-power-dot,
+.fo-power[data-state='restarting'] .fo-power-dot {
+  background: #e8c17e;
+}
+.fo-power-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(286px, calc(100vw - 32px));
+  padding: 16px;
+  border: 1px solid #365468;
+  border-radius: 10px;
+  background: #091923fa;
+  box-shadow: 0 12px 32px #0007;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.fo-power-panel strong {
+  font-size: 14px;
+  color: #e3f2fa;
+}
+.fo-power-panel p {
+  margin: 9px 0;
+  color: #91adbd;
+}
+.fo-power-panel .fo-power-status {
+  color: #8ed8f8;
+}
+.fo-power-panel small {
+  display: block;
+  color: #7c98a9;
+  font-size: 11px;
+}
+.fo-power-actions {
+  display: grid;
+  gap: 6px;
+  margin: 13px 0;
+}
+.fo-power-actions button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 8px 10px;
+  text-align: left;
+  border: 1px solid #2c495b;
+  border-radius: 6px;
+  background: #102735;
+  color: #d6e8f2;
+  font: inherit;
+  cursor: pointer;
+}
+.fo-power-actions button:hover:enabled {
+  background: #1b3b4d;
+  border-color: #5988a0;
+}
+.fo-power-actions button:disabled {
+  opacity: 0.42;
+  cursor: default;
+}
+.fo-power-panel .fo-power-error {
+  color: #edb681;
+}
+.fo-power button:focus-visible {
+  outline: 2px solid #8ed8f8;
+  outline-offset: 3px;
+}
+@media (max-width: 700px) {
+  .fo-power {
+    position: fixed;
+  }
+}

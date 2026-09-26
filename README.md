@@ -1,96 +1,139 @@
-# Cheleby Home
+# AI Office
 
-Codex oturumlarını, kullanıcının seçtiği ofis görüntüsünde **sabit bir kamera açısından** izleme projesi. Güncel yön: referans görselden hazırlanan ofis katmanları, Cheleby'nin masada oturan ofis sürümü, ayrı robotlar, hareketli ekran içerikleri ve gerçek React bilgi panelleri. Serbest gezinme yok; bu aşamada masaüstü hedefleniyor.
+**Watch your Codex sessions work in a shared virtual office.**
 
-**B2 sabit ofis web önizlemesi hazır.** Kaynak ofis, karakter/sandalye kesitleri, perspektif ekranlar ve gerçek React panelleri birlikte çalışıyor. Mevcut yerel gözlemci kullanılıyor; karakter animasyonları B3 aşamasında. [B2 uygulama ve doğrulama kaydı](docs/B2_FIXED_OFFICE_WEB_2026-09-12.md).
+AI Office turns local **OpenAI Codex** session activity into a fixed-camera office in your desktop browser. Each main session has its own room; its associated agents appear at their desks. See who is working, who is waiting for your answer, and what happened most recently without repeatedly switching between conversations.
 
-[Güncel görsel karar](docs/FIXED_CAMERA_OFFICE_DECISION_2026-09-12.md) · [Ürün planı](docs/CHELEBY_HOME_PLAN.md) · [Yol haritası](docs/CHELEBY_HOME_ROADMAP.md) · [Bağlantı kabulü](docs/CONNECTION_ACCEPTANCE_2026-09-11.md) · [3D ofis kabulü](docs/OFFICE_PROTOTYPE_2026-09-11.md) · [Performans ve Blender](docs/PERFORMANCE_AND_BLENDER_2026-09-12.md)
+[Türkçe](README.tr.md) · [MIT license](LICENSE) · [Platform verification](docs/PLATFORMS.md) · [Contributing](CONTRIBUTING.md)
 
-## Güncel görsel karar ve sıradaki teslim
+[![CI](https://github.com/chelebyy/ai-office/actions/workflows/ci.yml/badge.svg)](https://github.com/chelebyy/ai-office/actions/workflows/ci.yml)
 
-[Seçilen ofis görseli](docs/concepts/office-concept-v3-mascot.png) ana referanstır. B2'de görüntünün sabit bölümleri korundu; karakter/sandalye kesitleri, ekranlar ve ön örtücü parçalar ayrı katmanlarda çalışıyor. Kurulu Cheleby peti kimlik kaynağıdır ve değiştirilmez.
+## What is it useful for?
 
-**B1 v2** [Cheleby masa pozu](docs/concepts/cheleby-office-b1-v2.png) B2'nin kaynak karesidir. Kullanıcı B2'ye geçilmesini istedi. İlk görünüm tarayıcıda karşılaştırıldı; görsel kullanıcı kabulü ve B3 hareketleri açık. [İlk görsel kayıt](docs/B1_CHELEBY_OFFICE_STILL_2026-09-12.md), [güncel karar](docs/FIXED_CAMERA_OFFICE_DECISION_2026-09-12.md).
+- **Follow several projects at once.** Browse projects and their sessions, switch rooms, and keep the selected room visible after its work finishes.
+- **Notice when you are needed.** Working, waiting, completed-turn, stale and disconnected states are distinguished. Visible questions and recent activity help you decide which Codex conversation to return to.
+- **See the team at work.** The main character and up to three robot desks reflect their associated sessions. Larger teams remain represented in the session/event information.
+- **Read recent activity.** The wall screen and expandable feed show observed tool activity and visible assistant messages. The small code/terminal monitors are decorative, activity-linked animations; they are not live IDE or terminal mirrors.
+- **Make a comfortable workspace.** Fixed camera, day/night lighting, optional location-based weather, motion controls, and Turkish/English interface preferences.
 
-`/` ve `/?view=office` yeni sabit ofisi açar. Karaktere tıkla; gerçek oturum ve son görünür asistan mesajı açılır. Sol alttan oturum seçilebilir. Ayarlardan TR/EN/otomatik dil, etiketler, ekranlar ve karakter katmanı değiştirilebilir. Bağlı alt ajanı olmayan masa açıkça atanmadı olarak gösterilir. `/?view=events` gözlemci geçmişi, `/?view=legacy` önceki WebGL ofis, `/?view=blender` ise gösterim hareketleri içeren GLB pilotudur.
+AI Office is an **observer**, not an agent controller. Continue prompting and answering in Codex. Its power controls manage local observation, not Codex tasks. It does not call an LLM to create the office activity and does not provide a Codex subscription.
 
-## Başlatma
+## Compatibility
 
-Gereksinim: Node.js **24.13 veya daha yeni bir 24.x** sürümü ve npm. Bağımlılıklar kilit dosyasında sabittir. İlk doğrulama Windows üzerinde yapıldı; macOS/Linux çalışma kabulü henüz yapılmadı.
+**Built for and tested with Codex only.** Other LLMs, assistants and agent tools have not been tested. AI Office is an independent community project, not an official OpenAI product.
 
-Proje klasöründe:
+| Platform | Verification |
+| --- | --- |
+| Windows | Tested: local observer, launchers, browser controls and desktop interface. |
+| Linux | Tested on **Ubuntu 26.04 under WSL 2**, using native Linux Node.js, tests and build, Linux file observation, and live browser checks from Windows Chrome. |
+| macOS | **Not tested.** No macOS device was available. |
+
+The Linux acceptance used representative Linux session files and a real Windows Codex Desktop record read from WSL. A native Linux Codex CLI session lifecycle, other distributions and a native Linux desktop browser were not covered. See [platform evidence and limits](docs/PLATFORMS.md).
+
+The interface targets **desktop browsers**. Mobile use is not a supported target. Turkish and English are available; automatic language selection is a local heuristic, not general translation.
+
+## Quick start
+
+You need Git, **Node.js 24.13 or newer within the 24.x line**, npm, a desktop browser and local Codex session records.
 
 ```sh
+git clone https://github.com/chelebyy/ai-office.git
+cd ai-office
 npm ci
 npm run build
 npm start
 ```
 
-Tarayıcıda **http://127.0.0.1:4317/** adresini aç. Durdurmak için sunucuyu başlattığın terminalde `Ctrl+C` kullan. Şimdilik derlemede ve başlatmada geliştirme bağımlılıkları da gereklidir; `--omit=dev` kullanma.
+Open the URL printed in the terminal, normally **http://127.0.0.1:4317/**. Stop this manually started server with `Ctrl+C`. Install development dependencies too: the build and current runtime require them, so do not use `--omit=dev`.
 
-Geliştirme sırasında `npm run dev` kullanılabilir. Bu modda kaynaklar Vite üzerinden sunulur; otomatik sıcak yenileme kapalıdır. Web değişikliklerinde sayfayı yenile, gözlemci değişikliklerinde süreci yeniden başlat. Normal `npm start` kullanımında web değişikliklerinden sonra yeniden derle.
+### Windows launcher
 
-## Yapılandırma
+After installing the prerequisites and dependencies, open `Ofisi Ac.cmd` to prepare/start the office or reuse its running server. Use `Ofisi Kapat.cmd` to stop the managed server and its recovery loop. Closing a browser tab does not stop the server.
 
-| Ortam değişkeni | Varsayılan | Açıklama |
-| --- | --- | --- |
-| `CHELEBY_CODEX_HOME` | `CODEX_HOME`, yoksa kullanıcı profilindeki `.codex` | Codex profil kökü; `sessions` alt klasörü okunur. |
-| `CHELEBY_PORT` | `4317` | Yerel port; 1024–65535. |
-| `CHELEBY_RECENT_DAYS` | `7` | Keşfedilecek oluşturulma günü; 1–366. |
-| `CHELEBY_MAX_FILES` | `60` | Aynı anda seçilecek yakın kayıt üst sınırı; 1–250. |
-| `CHELEBY_POLL_MS` | `1500` | Artımlı kontrol aralığı; 500–30000 ms. |
-
-Örneğin PowerShell'de başka bir profili okumak için:
+Optional desktop shortcuts:
 
 ```powershell
-$env:CHELEBY_CODEX_HOME = 'D:\CodexProfile'
+powershell -ExecutionPolicy Bypass -File scripts/install-office-shortcut.ps1
+powershell -ExecutionPolicy Bypass -File scripts/install-office-shortcut.ps1 -Stop
+```
+
+These create **AI Office** and **AI Office - Kapat** shortcuts.
+
+### Linux / WSL launcher
+
+Install Node and dependencies **inside Linux**; do not reuse Windows `node_modules`. Prefer keeping the checkout on the Linux filesystem.
+
+```sh
+sh scripts/start-office.sh --port 4327
+sh scripts/start-office.sh --action status --port 4327
+sh scripts/stop-office.sh --port 4327
+```
+
+Open the URL returned in the JSON response. The scripts do not install packages or open a browser. Port 4327 lets a WSL instance coexist with a Windows instance on 4317.
+
+By default the Linux process reads its own Codex profile. To explicitly observe a Windows profile from WSL, replace `<windows-user>`:
+
+```sh
+AI_OFFICE_CODEX_HOME='/mnt/c/Users/<windows-user>/.codex' sh scripts/start-office.sh --port 4327
+```
+
+Stop the existing instance on that port before changing its source. Windows and Linux profiles are not automatically merged.
+
+## Everyday use
+
+1. Start Codex and work in a local session.
+2. Open AI Office and select the project/session you want to follow.
+3. Click a character for session details, or expand the wall feed to read recent activity.
+4. If the office shows a question, return to the original Codex conversation to respond.
+5. Use settings for language, motion, lighting and appearance. The power menu starts/stops/restarts observation; pausing the view only freezes its presentation.
+
+No sessions showing? Check the selected profile path and discovery limits below. A stale or disconnected label is not proof that Codex itself stopped.
+
+## Configuration
+
+Use `AI_OFFICE_*` variables. The corresponding legacy `CHELEBY_*` aliases still work when the new variable is empty or unset. A non-empty new variable takes precedence; launcher port arguments override both.
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `AI_OFFICE_CODEX_HOME` | `CODEX_HOME`, otherwise `~/.codex` | Profile root containing the `sessions` directory. |
+| `AI_OFFICE_PORT` | `4317` | Local port, 1024–65535. |
+| `AI_OFFICE_RECENT_DAYS` | `7` | Initial discovery window in creation days, 1–366. Increase it for older sessions. |
+| `AI_OFFICE_MAX_FILES` | `60` | Selected recent-file limit, 1–250. |
+| `AI_OFFICE_POLL_MS` | `1500` | Incremental polling interval, 500–30000 ms. |
+
+PowerShell example:
+
+```powershell
+$env:AI_OFFICE_CODEX_HOME = 'D:\CodexProfile'
 npm start
 ```
 
-POSIX kabuk karşılığı: `CHELEBY_CODEX_HOME=/path/to/profile npm start`. Yol taşınabilirliği tasarıma işlendi; bu komut örneği macOS/Linux kabul kanıtı değildir.
+## Data and limitations
 
-## Mevcut teknik prototiplerde görülenler
+- The observer reads local records and does not send commands to Codex. The web server binds to `127.0.0.1` with local cookie/origin checks.
+- Session data stays in the local observer/browser flow. Optional city search and weather use Open-Meteo: those requests include the search query or selected coordinates, not session records.
+- Raw user messages, internal reasoning and full tool inputs/outputs are not forwarded to the browser. Visible questions, assistant messages and bounded activity previews may still contain private information. Redaction is not complete anonymization; review the display before sharing screenshots.
+- Counters cover the records actually read. Large files initially use metadata plus a bounded tail; each session retains up to 120 recent events and 16,000 characters of recent assistant text. Historical discovery is incremental, so large archives may need several polls to discover an old resumed session. History is reconstructed after restart, not stored in a separate persistent database.
+- A completed turn does not mean a closed session. The application does not infer cost, test success, percentage completion or the model's internal reasoning.
+- Codex record formats can change. Other LLM integrations, macOS and all Linux distributions are not claimed as supported.
 
-Aşağıdaki kamera, model ve dar ekran davranışları mevcut v0.2 uygulamasını anlatır; yeni sabit açılı tasarımın kabul şartları değildir.
-
-- Gerçek 3D oda: ahşap zemin, masalar, bitkiler, dinlenme köşesi, dağ/orman manzaralı pencere ve ana oturumun son etkinliğini gösteren duvar ekranı.
-- Ofis, ana masa ve üstten kamera; sürükleyerek döndürme, tekerlekle yaklaşma ve kamera sıfırlama. Dokunmatik kullanımda sürükleme ve iki parmakla yakınlaşma hedeflenir; fiziksel dokunmatik cihaz kabulü açık.
-- Gözlüksüz kapüşonlu ana maskot ve üç robot modeli. Bağlı alt ajanı olmayan robotlar açıkça **model örneği** olarak etiketlenir. Yazma hareketi yalnızca taze, erişilebilir ve çalışıyor durumundaki kayıtta etkinleşir.
-- Karakter seçimi, açılır ayrıntı paneli, standart/yüksek kalite ve hareket ayarı. Azaltılmış hareket tercihi ilk açılışta uygulanır; WebGL kaybında yeniden deneme veya olay ekranına geçiş sunulur.
-- Görünüm ayarlarında **Dengeli (60 FPS)** ve **Tasarruf (30 FPS)** kaynak kullanımı seçimi. Tasarruf piksel yoğunluğunu 1 ile sınırlar ve yüksek kaliteyi kapatır; tercih bu tarayıcıda saklanır. Hareket gerekmeyen sahne yalnızca veri veya kamera değiştiğinde çizilir. Belge gizlendiğinde çizim ve animasyon planlaması durur. Ölçüm alanı gerçek çizilen kareleri gösterir; CPU/GPU yüzdesi değildir.
-- Metadata kaynaklı ana oturum, alt ajan ve sistem yardımcısı ayrımı. Fork tek başına alt ajan sayılmaz.
-- Son gözlenen tur başlangıcı/bitişi/iptali, araç çağrısı/sonucu ve görünür asistan mesajları.
-- Oturum seçimi, kaynak filtresi, veri kapsamı, görünümü duraklatma ve yeniden bağlanma.
-- Ekran genişliğini kullanan düzen; dar ekranda alt alta paneller.
-- İlk Türkçe/İngilizce dil dosyaları. Belirgin kullanıcı mesajından dil seçimi; aksi durumda tarayıcı dili ve İngilizce yedek. Dil algılama sezgiseldir, diğer dillerin çevirisi henüz yoktur.
-
-Üstteki **Ofis / Olaylar** düğmeleri aynı yerel gözlemcinin iki görünümünü açar. Soldan bir oturum seçildiğinde tek oda örneği o oturumun verisiyle güncellenir; henüz çok odalı bir bina gösterilmez. Sahne üç alt ajan masasını gösterebilir; ekip sayacı daha geniş ekibi sayabilir, tüm kayıtlar Olaylar görünümünden incelenir. Bu v0.2 model ve animasyonları kodla üretilmiştir. Ayrı Blender/GLB pilotu korunur. Yeni B2 görünümü yukarıda açıklanan ayrı rotadır; B1 v2 karesinin katmanlarını kullanır, hareket atlası henüz yoktur. Tam 3D iskelet, yürüme ve oturup kalkma güncel görsel teslimin ön koşulu değildir.
-
-## Veri sınırları
-
-Gözlemci yalnızca kayıt okur, Codex'e komut göndermez. Web sunucusu `127.0.0.1` adresine bağlanır; yerel oturum çerezi ve kaynak kontrolü kullanır. Ham kullanıcı mesajı, modelin iç muhakemesi, talimatlar ve araç girdisi/çıktısı tarayıcıya aktarılmaz. Görünür asistan mesajlarında sık rastlanan erişim bilgisi kalıpları maskelenir; bu tam anonimleştirme değildir.
-
-Sayaçlar **okunan kayıt aralığını** temsil eder. Başlangıçta büyük dosyanın metadata satırı ve son 2 MiB'ı okunur; kesilen geçmiş işaretlenir. Oturum başına en çok 120 yakın olay tutulur. Yeni keşif son 7 oluşturulma günüyle sınırlıdır; önceden izlenen daha eski dosyalar süreç içinde izlenmeye devam eder. Daha eski, hâlâ kullanılan bir oturum görünmüyorsa gün sınırını artır.
-
-`Tur bitti`, oturumun kapandığı anlamına gelmez. Eski bir kayıttaki `Çalışıyor` etiketi de sürecin hâlâ çalıştığının kanıtı değildir; güncellik uyarısı bu ayrımı gösterir. Araç sonucunun başarı/hata içeriği, test toplamı, maliyet ve ilerleme yüzdesi çıkarılmaz. Sarmalanmış çağrılarda yalnızca sarmalayıcı adı görünebilir.
-
-Geçmiş şu an bellektedir. Gözlemci yeniden başlayınca mevcut dosya penceresinden tekrar kurulur; önceki olay sayılarının aynen korunması garanti edilmez. Kalıcı veritabanı, replay ve kaynak sürümlerini kapsayan kararlılık çalışması yol haritasındadır.
-
-## Kontroller ve dosyalar
+## Development and evidence
 
 ```sh
+npm run dev
 npm run check
 ```
 
-Bu komut tip kontrolünü, 32 davranış testini ve web derlemesini çalıştırır. Testler proje içindeki geçici örneklerle çalışır; gerçek Codex kayıtlarına yazmaz. Kamera, karakter seçimi, WebGL yeniden açma ve ekran boyutları ayrıca Windows/Chromium üzerinde denendi; diğer cihaz ve tarayıcılar için sonuç çıkarılmaz.
+Development hot reload is disabled: refresh for web changes and restart for observer changes. `npm run check` runs repository privacy checks, TypeScript, behavioral tests and the production build.
 
-| Konum | Sorumluluk |
-| --- | --- |
-| `src/observer` | Kayıt ayrıştırma, artımlı okuma, yerel HTTP/WebSocket. |
-| `src/shared/contract.ts` | Gözlemci ve arayüzün sürümlü veri sözleşmesi. |
-| `src/web` | React arayüzü, dil kaynakları ve bağlantı yönetimi. |
-| `src/web/office` | Mevcut WebGL oda ve Blender pilotu, karakterler ve ofis arayüzü. |
-| `test` | Kayıt, okuma ve yerel bağlantı davranışları. |
-| `docs` | Kararlar, konseptler, yol haritası ve kabul raporu. |
+CI runs on Windows and Linux for pull requests and default-branch changes. Version tags trigger the same checks before publishing a GitHub source release. This local application is not deployed to a hosted server.
 
-`.local`, `.playwright-mcp`, `.cache`, `node_modules`, `dist` ve ortam dosyaları Git dışında tutulur. Yerel ekran kayıtları oturum bilgisi içerebilir. GitHub yayını henüz yapılmadı; paylaşım hazırlığı ayrı aşamadır.
+- [Architecture](docs/ARCHITECTURE.md)
+- [Platform verification and limits](docs/PLATFORMS.md)
+- [Privacy and data handling](docs/PRIVACY.md)
+- [Security reporting](SECURITY.md)
+- [Contribution and release process](CONTRIBUTING.md)
+
+## License
+
+[MIT](LICENSE). You may use, copy, modify, redistribute and sell the project, including in commercial and closed-source products, while retaining the copyright and license notice. No warranty is provided. Third-party dependencies retain their own licenses.

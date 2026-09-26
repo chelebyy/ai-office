@@ -1,6 +1,8 @@
 import { StrictMode, Suspense, lazy, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { browserLocale, dictionaries, eventLabels, statusLabels } from './i18n.ts';
+import { dictionaries, eventLabels, statusLabels } from './i18n.ts';
+import { useLanguage } from './use-language.ts';
+import { remember, stored } from './fixed-office/fixed-state.ts';
 import { useObserver } from './use-observer.ts';
 import type { SessionView, Source } from '../shared/contract.ts';
 import { OfficeView } from './office/OfficeView.tsx';
@@ -17,13 +19,10 @@ function App() {
   );
   const [paused, setPaused] = useState(false);
   const { snapshot, connection } = useObserver(paused);
-  const [selectedId, setSelectedId] = useState<string | null>(() =>
-    localStorage.getItem('cheleby.selected'),
-  );
+  const [selectedId, setSelectedId] = useState<string | null>(() => stored('cheleby.selected', ''));
   const [source, setSource] = useState<Source | 'all'>('all');
   const [showInternal, setShowInternal] = useState(false);
   const [tab, setTab] = useState<'events' | 'coverage'>('events');
-  const [locale, setLocale] = useState(browserLocale);
   const sessions = snapshot?.sessions ?? [];
   const visible = sessions.filter(
     (s) =>
@@ -33,16 +32,16 @@ function App() {
     visible.find((s) => s.id === selectedId) ??
     visible.find((s) => s.agentKind === 'main') ??
     visible[0];
+  const { locale, source: localeSource } = useLanguage(selected?.locale);
   useEffect(() => {
-    setLocale(selected?.locale ?? browserLocale());
     if (selected?.id) {
       setSelectedId(selected.id);
-      localStorage.setItem('cheleby.selected', selected.id);
+      remember('cheleby.selected', selected.id);
     }
   }, [selected?.id, selected?.locale]);
   useEffect(() => {
     document.documentElement.lang = locale;
-    document.title = `Cheleby Home · ${view === 'office' ? officeText[locale].office : dictionaries[locale].studio}`;
+    document.title = `AI Office · ${view === 'office' ? officeText[locale].office : dictionaries[locale].studio}`;
   }, [locale, view]);
   const t = dictionaries[locale];
   const time = (value: string | null) =>
@@ -71,12 +70,12 @@ function App() {
   return (
     <div className={`app-shell ${view === 'office' ? 'office-mode' : ''}`}>
       <header className="topbar">
-        <a className="brand" href="/" aria-label="Cheleby Home">
+        <a className="brand" href="/" aria-label="AI Office">
           <span className="brand-mark" aria-hidden="true">
             ⌂
           </span>
           <span>
-            cheleby<span className="brand-light"> home</span>
+            AI<span className="brand-light"> Office</span>
             <small>{view === 'office' ? officeText[locale].identity : t.studio}</small>
           </span>
         </a>
@@ -95,7 +94,7 @@ function App() {
           </button>
         </div>
         <a href="/?view=blender" className="local-tag">
-          Blender önizleme ↗
+          {t.blenderPreview}
         </a>
         <div className="connection">
           <span className={`dot ${connection}`} aria-hidden="true" />
@@ -263,7 +262,11 @@ function App() {
                         {t.locale}
                         <strong>
                           {locale.toUpperCase()} ·{' '}
-                          {selected.locale ? t.localeSession : t.localeBrowser}
+                          {localeSource === 'preference'
+                            ? t.localePreference
+                            : localeSource === 'session'
+                              ? t.localeSession
+                              : t.localeBrowser}
                         </strong>
                       </span>
                     </div>
@@ -420,21 +423,24 @@ function App() {
       <footer>
         <span>{t.privacy}</span>
         <span>
-          CHELEBY HOME <span className="footer-version">v0.2</span>
+          AI OFFICE <span className="footer-version">v0.2</span>
         </span>
       </footer>
     </div>
   );
 }
+function OfficeLoading() {
+  const { locale } = useLanguage();
+  return (
+    <div role="status" style={{ padding: 32 }}>
+      {dictionaries[locale].loading}
+    </div>
+  );
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Suspense
-      fallback={
-        <div role="status" style={{ padding: 32 }}>
-          Ofis açılıyor…
-        </div>
-      }
-    >
+    <Suspense fallback={<OfficeLoading />}>
       {requestedView === 'blender' ? (
         <BlenderPilot />
       ) : requestedView === 'legacy' || requestedView === 'events' ? (

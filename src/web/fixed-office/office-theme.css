@@ -1,0 +1,28 @@
+/* One shared light adjustment keeps the original artwork and moving cutouts aligned.
+   Live feeds, decorative code and interaction overlays keep their own contrast. */
+.fo-artwork[data-theme='night'] .fo-scene > image,
+.fo-artwork[data-theme='night'] [data-layer='character-art'] {
+  filter: brightness(0.79) saturate(0.92);
+}
+.fo-artwork[data-theme='day'] .fo-scene > image,
+.fo-artwork[data-theme='day'] [data-layer='character-art'] {
+  filter: brightness(1.08) saturate(0.88);
+}
+.fo-theme-status {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 9;
+  max-width: min(340px, 85%);
+  padding: 9px 12px;
+  border: 1px solid #486178;
+  border-radius: 8px;
+  background: #0b1b2bee;
+  color: #d7e7f2;
+  font-size: 12px;
+}
+.fo-theme-status button {
+  display: block;
+  margin-top: 5px;
+  padding: 3px 8px;
+}

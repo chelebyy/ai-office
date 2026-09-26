@@ -1,0 +1,335 @@
+.fo-monitor-wall [data-event-kind='tool_started'] {
+  color: #b3a0dc;
+}
+.fo-monitor-wall [data-event-kind='tool_completed'],
+.fo-monitor-wall [data-event-kind='turn_completed'] {
+  color: #87cbb2;
+}
+.fo-monitor-wall [data-event-kind='waiting'] {
+  color: #dec084;
+}
+.fo-monitor-wall [data-event-kind='turn_aborted'],
+.fo-monitor-wall [data-outcome='error'] {
+  color: #e49d9f;
+}
+.fo-monitor-wall [data-event-kind='assistant_message'] {
+  color: #8dc4dd;
+}
+.fo-monitor-wall .fo-wall-tool {
+  color: #9ac9c9;
+}
+.fo-code-screen {
+  --code-row: 16px;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(125deg, #0b1825, #07111c);
+  color: #a5bdcb;
+  font:
+    12px/var(--code-row) Consolas,
+    monospace;
+  pointer-events: none;
+  text-align: left;
+}
+.fo-code-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 24px;
+  min-height: 24px;
+  padding: 0 10px;
+  background: #122332;
+  color: #8cabbf;
+  font:
+    11px Consolas,
+    monospace;
+}
+.fo-code-title b {
+  margin-left: auto;
+  color: #52748a;
+  font-weight: normal;
+}
+.fo-code-lights {
+  display: flex;
+  gap: 4px;
+}
+.fo-code-lights i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #d98783;
+}
+.fo-code-lights i:nth-child(2) {
+  background: #d9b979;
+}
+.fo-code-lights i:nth-child(3) {
+  background: #73bca5;
+}
+.fo-code-tabs {
+  display: flex;
+  gap: 18px;
+  height: 23px;
+  min-height: 23px;
+  padding-left: 12px;
+  border-bottom: 1px solid #1b3041;
+  font-size: 10px;
+  color: #5e7c91;
+}
+.fo-code-tabs span {
+  padding: 3px 6px;
+}
+.fo-code-tabs span:first-child {
+  color: #7bbfd5;
+  border-bottom: 1px solid #68b9c7;
+}
+.fo-code-workspace {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  padding: 5px 0;
+}
+.fo-code-viewport {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+.fo-code-track {
+  animation: fo-code-scroll 260ms ease-out both;
+}
+.fo-code-row {
+  display: flex;
+  align-items: baseline;
+  height: var(--code-row);
+  line-height: var(--code-row);
+  white-space: pre;
+}
+.fo-code-row small {
+  flex: 0 0 32px;
+  text-align: right;
+  padding-right: 10px;
+  font: inherit;
+  color: #425b70;
+}
+.fixed-office .fo-code-screen .fo-code-row code {
+  display: block;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  font: inherit;
+  line-height: var(--code-row);
+  white-space: pre;
+  color: inherit;
+}
+.fixed-office .fo-code-screen .fo-code-status {
+  display: flex;
+  position: static;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 1px 10px;
+  background: #122a3b;
+  flex-shrink: 0;
+  font:
+    9px/15px Consolas,
+    monospace;
+}
+.fixed-office .fo-code-screen .fo-code-status > span:last-child {
+  font: inherit;
+  letter-spacing: 0;
+}
+.fixed-office .fo-code-compact .fo-code-status {
+  font-size: 7px;
+  line-height: 12px;
+  padding: 0 6px;
+}
+.fo-code-current {
+  background: #82bad008;
+}
+.fo-code-cursor {
+  display: inline-block;
+  width: 6px;
+  height: 12px;
+  margin-left: 2px;
+  vertical-align: -2px;
+  background: #9dcfdf;
+  animation: fo-code-blink 1.3s steps(1) infinite;
+}
+.fo-code-screen[data-frozen='true'] .fo-code-cursor {
+  animation: none;
+  opacity: 0.45;
+}
+.fo-code-minimap {
+  width: 29px;
+  flex-shrink: 0;
+  margin: 0 8px;
+  opacity: 0.4;
+}
+.fo-code-minimap i {
+  display: block;
+  height: 2px;
+  margin: 3px 0;
+  background: #74b7c7;
+}
+.fo-code-minimap i:nth-child(3n) {
+  background: #ad88d0;
+  margin-left: 4px;
+}
+.fo-code-tree {
+  flex: 0 0 119px;
+  overflow: hidden;
+  border-right: 1px solid #1a3040;
+  padding-right: 4px;
+  margin-right: 5px;
+  color: #7898ac;
+  font-size: 10px;
+  white-space: pre;
+}
+.fo-code-tree b {
+  display: block;
+  padding: 0 6px 8px;
+  color: #a5b7c6;
+  font-size: 9px;
+  letter-spacing: 1px;
+  font-weight: normal;
+}
+.fo-code-tree div {
+  padding: 1px 5px;
+}
+.fo-tree-selected {
+  background: #28445b70;
+  color: #86c8d8;
+}
+.fo-code-status {
+  display: flex;
+  justify-content: space-between;
+  padding: 1px 10px;
+  min-height: 17px;
+  background: #122a3b;
+  color: #7faac3;
+  font:
+    9px/15px Consolas,
+    monospace;
+}
+.fo-code-terminal .fo-code-viewport {
+  padding-left: 12px;
+}
+.fo-code-terminal {
+  background: linear-gradient(125deg, #071b23, #07121c);
+}
+.fo-terminal-command {
+  color: #c7a3e6;
+}
+.fo-terminal-ready {
+  color: #85cdb0;
+}
+.fo-terminal-progress {
+  color: #e1bd7d;
+}
+.fo-terminal-log {
+  color: #75b4c6;
+}
+.fo-syntax-plain {
+  color: inherit;
+}
+.fo-syntax-keyword {
+  color: #b6a0e3;
+}
+.fo-syntax-string {
+  color: #90c9b1;
+}
+.fo-syntax-number {
+  color: #dcc18a;
+}
+.fo-syntax-comment {
+  color: #607e91;
+}
+.fo-syntax-heading {
+  color: #8ac7e2;
+}
+.fo-code-compact {
+  --code-row: 14px;
+  font-size: 11px;
+}
+.fo-code-ambient {
+  --code-row: 36px;
+  font-size: 20px;
+}
+.fo-code-ambient .fo-code-title {
+  height: 32px;
+  min-height: 32px;
+  font-size: 16px;
+}
+.fo-code-ambient .fo-code-workspace {
+  padding: 6px 0;
+}
+.fo-code-ambient .fo-code-row small {
+  flex-basis: 38px;
+  padding-right: 10px;
+}
+.fo-code-ambient .fo-code-cursor {
+  height: 20px;
+  width: 8px;
+}
+.fixed-office .fo-code-ambient .fo-code-status {
+  font-size: 13px;
+  line-height: 20px;
+}
+.fo-code-compact .fo-code-title {
+  height: 18px;
+  min-height: 18px;
+  font-size: 9px;
+  gap: 8px;
+}
+.fo-code-compact .fo-code-tabs {
+  height: 18px;
+  min-height: 18px;
+  font-size: 8px;
+}
+.fo-code-compact .fo-code-row small {
+  flex-basis: 24px;
+  padding-right: 6px;
+}
+.fo-code-compact .fo-code-status {
+  font-size: 7px;
+  padding: 0 6px;
+  min-height: 12px;
+  line-height: 12px;
+}
+@keyframes fo-code-scroll {
+  from {
+    transform: translateY(var(--code-row));
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes fo-code-scroll-next {
+  from {
+    transform: translateY(var(--code-row));
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes fo-code-blink {
+  0%,
+  55% {
+    opacity: 0.85;
+  }
+  56%,
+  100% {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fo-code-track,
+  .fo-code-cursor {
+    animation: none;
+  }
+}

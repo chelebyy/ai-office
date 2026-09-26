@@ -3,6 +3,20 @@ import assert from 'node:assert/strict';
 import { RecordReducer, detectLocale, publicText } from '../src/observer/parser.ts';
 import { event, metadata, NOW, row } from './helpers.ts';
 
+test('project identities normalize Windows paths without merging unrelated same-name folders', () => {
+  const project = (cwd: string) => {
+    const reducer = new RecordReducer(); reducer.accept(metadata('main', { cwd }), NOW);
+    return reducer.session!;
+  };
+  const windows = project('C:\\Work\\Shared\\');
+  assert.equal(windows.project, 'Shared');
+  assert.equal(windows.projectKey, project('c:/work/shared').projectKey);
+  assert.notEqual(windows.projectKey, project('C:/Other/Shared').projectKey);
+  assert.notEqual(project('/work/Shared').projectKey, project('/work/shared').projectKey);
+  assert.match(windows.projectKey!, /^[a-f0-9]{24}$/);
+  assert.ok(!JSON.stringify(windows).includes('Work'));
+});
+
 test('desktop and CLI provenance come from metadata; unknown remains unknown', () => {
   for (const [source, originator, expected] of [['vscode','Codex Desktop','desktop'],['cli','codex_cli_rs','cli'],['exec','codex_exec','cli'],['other','other','unknown']]) {
     const reducer = new RecordReducer(); reducer.accept(metadata('main-1', { source, originator }), NOW);
@@ -49,6 +63,33 @@ test('user-input tool is waiting, and raw user contents are not projected', () =
   reducer.accept(event('user_message', { message: 'Şimdi bu özelliği ekleyelim PRIVATE_USER' }), NOW);
   assert.equal(reducer.session?.locale, 'tr'); assert.ok(!JSON.stringify(reducer.session).includes('PRIVATE'));
 });
+test('async questions and similarly named tools keep the turn working', () => {
+  for (const name of ['request_user_input_async', 'functions.request_user_input_async', 'ask_user_async', 'task_request_user_input', 'request_user_input_status']) {
+    const reducer = new RecordReducer(); reducer.accept(metadata(), NOW);
+    reducer.accept(row('response_item', { type: 'function_call', name, call_id: 'async-1', arguments: 'PRIVATE_QUESTION' }), NOW);
+    assert.equal(reducer.session?.status, 'working', name);
+    assert.equal(reducer.session?.events.at(-1)?.kind, 'tool_started', name);
+    reducer.accept(row('response_item', { type: 'function_call_output', call_id: 'async-1', output: 'PRIVATE_ANSWER' }), NOW);
+    assert.equal(reducer.session?.status, 'working', name);
+    assert.ok(!JSON.stringify(reducer.session).includes('PRIVATE'));
+  }
+});
+
+test('recognized blocking questions wait until their tool response arrives', () => {
+  for (const name of ['request_user_input', 'functions.request_user_input', 'ask_user', 'functions.ask_user']) {
+    const reducer = new RecordReducer(); reducer.accept(metadata(), NOW);
+    reducer.accept(row('response_item', { type: 'custom_tool_call', name, call_id: 'blocking-1', input: 'PRIVATE_QUESTION' }), NOW);
+    assert.equal(reducer.session?.status, 'waiting', name);
+    assert.equal(reducer.session?.events.at(-1)?.kind, 'waiting', name);
+    reducer.accept(row('response_item', { type: 'custom_tool_call_output', call_id: 'blocking-1', output: 'PRIVATE_ANSWER' }), NOW);
+    assert.equal(reducer.session?.status, 'working', name);
+    assert.equal(reducer.session?.currentTool, null);
+    assert.equal(reducer.session?.counts.toolStarts, 1);
+    assert.equal(reducer.session?.counts.toolCompletions, 1);
+    assert.ok(!JSON.stringify(reducer.session).includes('PRIVATE'));
+  }
+});
+
 test('analysis, instructions, reasoning and unknown message phases cannot leak', () => {
   const reducer = new RecordReducer(); reducer.accept(metadata('x', { base_instructions: 'PRIVATE_BASE' }), NOW);
   reducer.accept(row('response_item', { type: 'reasoning', summary: 'PRIVATE_REASONING' }), NOW);
