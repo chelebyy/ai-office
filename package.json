@@ -14,7 +14,9 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier --write src test vite.config.ts",
     "test": "node --import tsx --test test/parser.test.ts test/language.test.ts test/reader.test.ts test/server.test.ts test/office-state.test.ts test/frame-scheduler.test.ts test/fixed-office-state.test.ts test/agent-identity.test.ts test/live-motion.test.ts test/robot-motion.test.ts test/observer-health.test.ts test/public-content.test.ts test/io-deadline.test.ts test/launcher.windows.test.ts test/launcher.linux.test.ts test/office-runtime.test.ts test/office-environment.test.ts test/office-weather.test.ts test/pet-behavior.test.ts test/pet-gait.test.ts",
-    "check": "npm run typecheck && npm test && vite build"
+    "check:repository": "node scripts/repository-hygiene.mjs",
+    "test:config": "node --import tsx --test test/config.test.ts test/config-runtime.test.ts test/repository-hygiene.test.ts",
+    "check": "npm run check:repository && npm run typecheck && npm run test:config && npm test && vite build"
   },
   "dependencies": {
     "@react-three/drei": "10.7.8",

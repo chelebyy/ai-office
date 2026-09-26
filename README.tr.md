@@ -4,9 +4,9 @@
 
 AI Office, bilgisayarındaki **OpenAI Codex** oturumlarını masaüstü tarayıcında sabit kameralı bir ofis olarak gösterir. Her ana oturumun ayrı odası vardır; bağlı ajanları kendi masalarında görünür.
 
-[English](README.md) · [MIT lisansı](LICENSE)
+[English](README.md) · [MIT lisansı](LICENSE) · [Katkı rehberi](CONTRIBUTING.md)
 
-![AI Office masaüstü görünümü](docs/all-monitor-audit-20260926/desktop2560.jpg)
+[![CI](https://github.com/chelebyy/ai-office/actions/workflows/ci.yml/badge.svg)](https://github.com/chelebyy/ai-office/actions/workflows/ci.yml)
 
 ## Ne işe yarar?
 
@@ -28,7 +28,7 @@ Bu bir **izleme arayüzüdür**. Codex'e komut göndermez; soru ve yanıtların�
 | Linux | Ubuntu 26.04 / WSL 2 içinde gerçek Linux Node.js ile test, derleme, dosya izleme ve Windows Chrome üzerinden canlı arayüz kontrolleri yapıldı. |
 | macOS | Cihaz olmadığı için denenmedi. |
 
-Linux kabulünde Linux dosya sistemindeki temsili oturum kayıtları ve WSL'den okunan gerçek Windows Codex Desktop kaydı kullanıldı. Yerel Linux Codex CLI'nin kendi gerçek oturum yaşam döngüsü, diğer dağıtımlar ve yerel Linux masaüstü tarayıcısı bu kabulün dışında kaldı. [Ayrıntılı kayıt](docs/F2_WSL_ACCEPTANCE_2026-09-17.md).
+Linux kabulünde Linux dosya sistemindeki temsili oturum kayıtları ve WSL'den okunan gerçek Windows Codex Desktop kaydı kullanıldı. Yerel Linux Codex CLI'nin kendi gerçek oturum yaşam döngüsü, diğer dağıtımlar ve yerel Linux masaüstü tarayıcısı bu kabulün dışında kaldı. [Doğrulama kapsamı](docs/PLATFORMS.md).
 
 **Yalnızca Codex için geliştirildi ve Codex ile denendi.** Diğer LLM ve ajan araçlarıyla denenmedi. Masaüstü tarayıcı hedeflenir; telefon kullanımı desteklenen hedef değildir. OpenAI'ın resmî ürünü olmayan bağımsız bir topluluk projesidir.
 
@@ -68,16 +68,18 @@ Geçmiş sınırlı bir kayıt penceresinden okunur ve yeniden başlatmada tekra
 
 ## Doğrulamalar
 
-`npm run check` tip kontrolü, davranış testleri ve üretim derlemesini çalıştırır.
+`npm run check` depo gizlilik kontrolü, tip kontrolü, davranış testleri ve üretim derlemesini çalıştırır.
 
 - **26 Eylül 2026 Windows:** 128 test geçti, hata yok, Linux'a özel 1 grup atlandı; tip kontrolü ve derleme geçti.
 - **17 Eylül 2026 Ubuntu/WSL:** 100 test, tip kontrolü, derleme ve 7 canlı tarayıcı kontrolü geçti. Windows'a özel grup burada atlandı.
 - Bu sayılar ayrı tarihlerdeki koşulara aittir. Son Windows koşusunda Linux grubunun atlanması, Linux'un hiç denenmediği anlamına gelmez; son commitin Linux'ta yeniden çalıştırıldığı da iddia edilmez.
 
-[Monitör incelemesi](docs/ALL_MONITOR_REVIEW_2026-09-26.md) · [Linux kabulü](docs/F2_WSL_ACCEPTANCE_2026-09-17.md) · [Yol haritası](docs/CHELEBY_HOME_ROADMAP.md)
+CI, Windows ve Linux üzerinde otomatik test ve derleme çalıştırır. Sürüm etiketleri aynı kontrollerden sonra GitHub kaynak sürümünü yayımlar; sunucuya dağıtım yapılmaz.
+
+[Mimari](docs/ARCHITECTURE.md) · [Platformlar](docs/PLATFORMS.md) · [Gizlilik](docs/PRIVACY.md) · [Güvenlik](SECURITY.md)
 
 ## Lisans
 
 [MIT](LICENSE): herkes kullanabilir, kopyalayabilir, değiştirebilir, dağıtabilir ve ticari/kapalı kaynak projelerine dahil edebilir. Telif ve lisans metni korunmalıdır. Garanti verilmez; üçüncü taraf bağımlılıklar kendi lisanslarına tabidir.
 
-Eski geliştirme belgelerinde projenin önceki adı **Cheleby Home** geçer.
+Yapılandırmada `AI_OFFICE_*` adları kullanılır. Eski `CHELEBY_*` değişkenleri, yeni karşılığı boş veya tanımsızsa uyumluluk için okunur.

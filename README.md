@@ -4,9 +4,9 @@
 
 AI Office turns local **OpenAI Codex** session activity into a fixed-camera office in your desktop browser. Each main session has its own room; its associated agents appear at their desks. See who is working, who is waiting for your answer, and what happened most recently without repeatedly switching between conversations.
 
-[Türkçe](README.tr.md) · [MIT license](LICENSE) · [Platform verification](docs/F2_WSL_ACCEPTANCE_2026-09-17.md)
+[Türkçe](README.tr.md) · [MIT license](LICENSE) · [Platform verification](docs/PLATFORMS.md) · [Contributing](CONTRIBUTING.md)
 
-![AI Office desktop view](docs/all-monitor-audit-20260926/desktop2560.jpg)
+[![CI](https://github.com/chelebyy/ai-office/actions/workflows/ci.yml/badge.svg)](https://github.com/chelebyy/ai-office/actions/workflows/ci.yml)
 
 ## What is it useful for?
 
@@ -28,7 +28,7 @@ AI Office is an **observer**, not an agent controller. Continue prompting and an
 | Linux | Tested on **Ubuntu 26.04 under WSL 2**, using native Linux Node.js, tests and build, Linux file observation, and live browser checks from Windows Chrome. |
 | macOS | **Not tested.** No macOS device was available. |
 
-The Linux acceptance used representative Linux session files and a real Windows Codex Desktop record read from WSL. A native Linux Codex CLI session lifecycle, other distributions and a native Linux desktop browser were not covered. See the [dated acceptance report](docs/F2_WSL_ACCEPTANCE_2026-09-17.md).
+The Linux acceptance used representative Linux session files and a real Windows Codex Desktop record read from WSL. A native Linux Codex CLI session lifecycle, other distributions and a native Linux desktop browser were not covered. See [platform evidence and limits](docs/PLATFORMS.md).
 
 The interface targets **desktop browsers**. Mobile use is not a supported target. Turkish and English are available; automatic language selection is a local heuristic, not general translation.
 
@@ -57,7 +57,7 @@ powershell -ExecutionPolicy Bypass -File scripts/install-office-shortcut.ps1
 powershell -ExecutionPolicy Bypass -File scripts/install-office-shortcut.ps1 -Stop
 ```
 
-These create **AI Office** and **AI Office - Kapat** shortcuts. Earlier installations may still have shortcuts named Cheleby Home.
+These create **AI Office** and **AI Office - Kapat** shortcuts.
 
 ### Linux / WSL launcher
 
@@ -74,7 +74,7 @@ Open the URL returned in the JSON response. The scripts do not install packages 
 By default the Linux process reads its own Codex profile. To explicitly observe a Windows profile from WSL, replace `<windows-user>`:
 
 ```sh
-CHELEBY_CODEX_HOME='/mnt/c/Users/<windows-user>/.codex' sh scripts/start-office.sh --port 4327
+AI_OFFICE_CODEX_HOME='/mnt/c/Users/<windows-user>/.codex' sh scripts/start-office.sh --port 4327
 ```
 
 Stop the existing instance on that port before changing its source. Windows and Linux profiles are not automatically merged.
@@ -91,20 +91,20 @@ No sessions showing? Check the selected profile path and discovery limits below.
 
 ## Configuration
 
-The existing `CHELEBY_*` environment variable names are retained for compatibility.
+Use `AI_OFFICE_*` variables. The corresponding legacy `CHELEBY_*` aliases still work when the new variable is empty or unset. A non-empty new variable takes precedence; launcher port arguments override both.
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `CHELEBY_CODEX_HOME` | `CODEX_HOME`, otherwise `~/.codex` | Profile root containing the `sessions` directory. |
-| `CHELEBY_PORT` | `4317` | Local port, 1024–65535. |
-| `CHELEBY_RECENT_DAYS` | `7` | Initial discovery window in creation days, 1–366. Increase it for older sessions. |
-| `CHELEBY_MAX_FILES` | `60` | Selected recent-file limit, 1–250. |
-| `CHELEBY_POLL_MS` | `1500` | Incremental polling interval, 500–30000 ms. |
+| `AI_OFFICE_CODEX_HOME` | `CODEX_HOME`, otherwise `~/.codex` | Profile root containing the `sessions` directory. |
+| `AI_OFFICE_PORT` | `4317` | Local port, 1024–65535. |
+| `AI_OFFICE_RECENT_DAYS` | `7` | Initial discovery window in creation days, 1–366. Increase it for older sessions. |
+| `AI_OFFICE_MAX_FILES` | `60` | Selected recent-file limit, 1–250. |
+| `AI_OFFICE_POLL_MS` | `1500` | Incremental polling interval, 500–30000 ms. |
 
 PowerShell example:
 
 ```powershell
-$env:CHELEBY_CODEX_HOME = 'D:\CodexProfile'
+$env:AI_OFFICE_CODEX_HOME = 'D:\CodexProfile'
 npm start
 ```
 
@@ -124,16 +124,15 @@ npm run dev
 npm run check
 ```
 
-Development hot reload is disabled: refresh for web changes and restart for observer changes. `npm run check` runs TypeScript, behavioral tests and the production build.
+Development hot reload is disabled: refresh for web changes and restart for observer changes. `npm run check` runs repository privacy checks, TypeScript, behavioral tests and the production build.
 
-- **Latest Windows check (26 September 2026):** 128 passed, 0 failed, 1 Linux-only group skipped; typecheck and build passed.
-- **Linux acceptance (17 September 2026):** 100 tests, typecheck and build passed in native Linux Node under Ubuntu/WSL; 7 live browser checks passed. The Windows-only group was skipped there. This is dated platform evidence, not a claim that the latest commit was rerun on Linux.
-- [Monitor and desktop visual review](docs/ALL_MONITOR_REVIEW_2026-09-26.md)
-- [Windows launcher acceptance](docs/E1_WINDOWS_LAUNCHER_2026-09-14.md)
-- [Linux/WSL acceptance and boundaries](docs/F2_WSL_ACCEPTANCE_2026-09-17.md)
-- [Development history](docs/README_DEVELOPMENT_HISTORY.md) · [Roadmap](docs/CHELEBY_HOME_ROADMAP.md)
+CI runs on Windows and Linux for pull requests and default-branch changes. Version tags trigger the same checks before publishing a GitHub source release. This local application is not deployed to a hosted server.
 
-Earlier documents use the former name **Cheleby Home**. The default office is the fixed-camera view. Legacy WebGL and Blender experiments remain in the source; they do not describe the default experience.
+- [Architecture](docs/ARCHITECTURE.md)
+- [Platform verification and limits](docs/PLATFORMS.md)
+- [Privacy and data handling](docs/PRIVACY.md)
+- [Security reporting](SECURITY.md)
+- [Contribution and release process](CONTRIBUTING.md)
 
 ## License
 

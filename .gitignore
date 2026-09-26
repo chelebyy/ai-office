@@ -13,3 +13,15 @@ coverage/
 Thumbs.db
 __pycache__/
 *.blend1
+# Private development evidence and historical authoring files stay local.
+/.claude/
+/CODEBASE.md
+/assets/
+/design-review-*.png
+/docs/*2026*/
+/docs/*2026*.md
+/docs/CHELEBY_HOME_*.md
+/docs/README_DEVELOPMENT_HISTORY.md
+/docs/concepts/
+/docs/cheleby-office/
+/docs/cheleby-motion/

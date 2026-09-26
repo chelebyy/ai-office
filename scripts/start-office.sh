@@ -2,7 +2,7 @@
 set -eu
 
 action=start
-port=${CHELEBY_PORT:-4317}
+port=${AI_OFFICE_PORT:-${CHELEBY_PORT:-4317}}
 timeout=45
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -15,7 +15,7 @@ while [ "$#" -gt 0 ]; do
       esac
       shift 2 ;;
     --help)
-      printf '%s\n' 'AI Office (Linux/WSL)' 'sh scripts/start-office.sh [--action start|stop|status] [--port 4317] [--timeout 45]' 'JSON sonucundaki URL adresini tarayicida ac. Varsayilan kaynak: Linux ~/.codex; CHELEBY_CODEX_HOME ile acikca degistirilebilir.'
+      printf '%s\n' 'AI Office (Linux/WSL)' 'sh scripts/start-office.sh [--action start|stop|status] [--port 4317] [--timeout 45]' 'JSON sonucundaki URL adresini tarayicida ac. Varsayilan kaynak: Linux ~/.codex; AI_OFFICE_CODEX_HOME ile acikca degistirilebilir.'
       exit 0 ;;
     *) printf 'Bilinmeyen secenek: %s\n' "$1" >&2; exit 2 ;;
   esac

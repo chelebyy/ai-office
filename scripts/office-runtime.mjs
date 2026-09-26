@@ -208,6 +208,9 @@ async function supervise(runId) {
         windowsHide: true,
         env: {
           ...process.env,
+          AI_OFFICE_PORT: String(port),
+          AI_OFFICE_TRACKING: trackingEnabled ? 'running' : 'stopped',
+          // Keep older observer versions and existing managed instances compatible.
           CHELEBY_PORT: String(port),
           CHELEBY_TRACKING: trackingEnabled ? 'running' : 'stopped',
         },

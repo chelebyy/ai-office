@@ -32,7 +32,11 @@ function Find-NodeRuntime {
 $mutex = $null
 $ownsMutex = $false
 try {
-    if ($Port -eq 0) { $Port = if ($env:CHELEBY_PORT) { [int]$env:CHELEBY_PORT } else { 4317 } }
+    if ($Port -eq 0) {
+        $Port = if ($env:AI_OFFICE_PORT) { [int]$env:AI_OFFICE_PORT }
+                elseif ($env:CHELEBY_PORT) { [int]$env:CHELEBY_PORT }
+                else { 4317 }
+    }
     if ($Port -lt 1024 -or $Port -gt 65535) { throw 'Ofis portu 1024-65535 araliginda olmali.' }
     $nodePath = Find-NodeRuntime
     if ($Action -eq 'start') {

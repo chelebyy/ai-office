@@ -32,7 +32,7 @@ const en = {
   select: 'Choose a session to see its observed events.',
   noSessions: 'No sessions in this view',
   noSessionsBody: 'Try another source filter, or start a Codex session.',
-  missing: 'Session folder not found. Set CHELEBY_CODEX_HOME if Codex uses another profile.',
+  missing: 'Session folder not found. Set AI_OFFICE_CODEX_HOME if Codex uses another profile.',
   scanError: 'The source could not be checked. Last known state is preserved.',
   emptyEvents: 'No public events in this record window yet.',
   observed: 'Last observed state',
@@ -119,7 +119,7 @@ const tr: Dictionary = {
   noSessions: 'Bu görünümde oturum yok',
   noSessionsBody: 'Başka kaynak filtresi seçebilir veya Codex oturumu açabilirsin.',
   missing:
-    'Oturum klasörü bulunamadı. Codex başka profil kullanıyorsa CHELEBY_CODEX_HOME ayarlanabilir.',
+    'Oturum klasörü bulunamadı. Codex başka profil kullanıyorsa AI_OFFICE_CODEX_HOME ayarlanabilir.',
   scanError: 'Kaynak kontrol edilemedi. Bilinen son durum korunuyor.',
   emptyEvents: 'Bu kayıt aralığında henüz görünür olay yok.',
   observed: 'Gözlenen son durum',
