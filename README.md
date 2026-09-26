@@ -26,13 +26,13 @@ AI Office is an **observer**, not an agent controller. Continue prompting and an
 
 **Built for and tested with Codex only.** Other LLMs, assistants and agent tools have not been tested. AI Office is an independent community project, not an official OpenAI product.
 
-| Platform | Verification |
+| Platform | Status |
 | --- | --- |
-| Windows | Tested: local observer, launchers, browser controls and desktop interface. |
-| Linux | Tested on **Ubuntu 26.04 under WSL 2**, using native Linux Node.js, tests and build, Linux file observation, and live browser checks from Windows Chrome. |
-| macOS | **Not tested.** No macOS device was available. |
+| Windows | Desktop workflows verified; automated tests and builds run in CI. |
+| Linux / WSL 2 | Desktop workflows verified on Ubuntu under WSL 2; automated tests and builds run on Linux in CI. |
+| macOS | Compatibility not yet verified. |
 
-The Linux acceptance used representative Linux session files and a real Windows Codex Desktop record read from WSL. A native Linux Codex CLI session lifecycle, other distributions and a native Linux desktop browser were not covered. See [platform evidence and limits](docs/PLATFORMS.md).
+See [platform verification](docs/PLATFORMS.md) for the tested environments and integration coverage.
 
 The interface targets **desktop browsers**. Mobile use is not a supported target. Turkish and English are available; automatic language selection is a local heuristic, not general translation.
 
@@ -121,7 +121,7 @@ npm start
 - A completed turn does not mean a closed session. The application does not infer cost, test success, percentage completion or the model's internal reasoning.
 - Codex record formats can change. Other LLM integrations, macOS and all Linux distributions are not claimed as supported.
 
-## Development and evidence
+## Development
 
 ```sh
 npm run dev
@@ -129,6 +129,8 @@ npm run check
 ```
 
 Development hot reload is disabled: refresh for web changes and restart for observer changes. `npm run check` runs repository privacy checks, TypeScript, behavioral tests and the production build.
+
+The `test/` directory contains automated regression tests for session parsing, observation, local server security, launchers and interface behavior. Test helpers and sample records exercise these features without requiring your Codex history.
 
 CI runs on Windows and Linux for pull requests and default-branch changes. Version tags trigger the same checks before publishing a GitHub source release. This local application is not deployed to a hosted server.
 

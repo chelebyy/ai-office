@@ -24,15 +24,15 @@ Birden fazla projede Codex ile çalışırken sürekli konuşmalar arasında dol
 
 Bu bir **izleme arayüzüdür**. Codex'e komut göndermez; soru ve yanıtlarını Codex'teki asıl konuşmada sürdürürsün. Güç menüsü Codex görevlerini değil, yerel gözlemciyi yönetir. Ofis etkinliğini oluşturmak için LLM çağrısı yapmaz ve Codex aboneliği sağlamaz.
 
-## Nerede denendi?
+## Uyumluluk
 
 | Ortam | Durum |
 | --- | --- |
-| Windows | Yerel gözlemci, başlatıcılar, tarayıcı kontrolleri ve masaüstü arayüzü kontrol edildi. |
-| Linux | Ubuntu 26.04 / WSL 2 içinde gerçek Linux Node.js ile test, derleme, dosya izleme ve Windows Chrome üzerinden canlı arayüz kontrolleri yapıldı. |
-| macOS | Cihaz olmadığı için denenmedi. |
+| Windows | Masaüstü iş akışları doğrulandı; otomatik testler ve derleme CI üzerinde çalışır. |
+| Linux / WSL 2 | Masaüstü iş akışları Ubuntu / WSL 2 üzerinde doğrulandı; otomatik testler ve derleme Linux CI üzerinde çalışır. |
+| macOS | Uyumluluk henüz doğrulanmadı. |
 
-Linux kabulünde Linux dosya sistemindeki temsili oturum kayıtları ve WSL'den okunan gerçek Windows Codex Desktop kaydı kullanıldı. Yerel Linux Codex CLI'nin kendi gerçek oturum yaşam döngüsü, diğer dağıtımlar ve yerel Linux masaüstü tarayıcısı bu kabulün dışında kaldı. [Doğrulama kapsamı](docs/PLATFORMS.md).
+Test edilen ortamlar ve entegrasyon kapsamı için [platform rehberine](docs/PLATFORMS.md) bak.
 
 **Yalnızca Codex için geliştirildi ve Codex ile denendi.** Diğer LLM ve ajan araçlarıyla denenmedi. Masaüstü tarayıcı hedeflenir; telefon kullanımı desteklenen hedef değildir. OpenAI'ın resmî ürünü olmayan bağımsız bir topluluk projesidir.
 
@@ -70,13 +70,16 @@ Ham kullanıcı mesajları, iç muhakeme ve tam araç girdisi/çıktısı taray�
 
 Geçmiş sınırlı bir kayıt penceresinden okunur ve yeniden başlatmada tekrar oluşturulur. Bir turun bitmesi oturumun kapanması değildir. Maliyet, test başarısı veya tamamlanma yüzdesi tahmin edilmez. Codex kayıt biçiminin değişmesi uyumluluğu etkileyebilir.
 
-## Doğrulamalar
+## Geliştirme
 
-`npm run check` depo gizlilik kontrolü, tip kontrolü, davranış testleri ve üretim derlemesini çalıştırır.
+```sh
+npm run dev
+npm run check
+```
 
-- **26 Eylül 2026 Windows:** 128 test geçti, hata yok, Linux'a özel 1 grup atlandı; tip kontrolü ve derleme geçti.
-- **17 Eylül 2026 Ubuntu/WSL:** 100 test, tip kontrolü, derleme ve 7 canlı tarayıcı kontrolü geçti. Windows'a özel grup burada atlandı.
-- Bu sayılar ayrı tarihlerdeki koşulara aittir. Son Windows koşusunda Linux grubunun atlanması, Linux'un hiç denenmediği anlamına gelmez; son commitin Linux'ta yeniden çalıştırıldığı da iddia edilmez.
+Geliştirme sırasında otomatik yenileme kapalıdır: arayüz değişikliklerinde sayfayı yenile, gözlemci değişikliklerinde uygulamayı yeniden başlat. `npm run check` depo gizlilik kontrolü, tip kontrolü, davranış testleri ve üretim derlemesini çalıştırır.
+
+`test/` klasörü; oturum ayrıştırma, dosya izleme, yerel sunucu güvenliği, başlatıcılar ve arayüz davranışı için otomatik regresyon testlerini içerir. Test yardımcıları ve örnek kayıtlar, kişisel Codex geçmişine ihtiyaç duymadan bu özellikleri sınar.
 
 CI, Windows ve Linux üzerinde otomatik test ve derleme çalıştırır. Sürüm etiketleri aynı kontrollerden sonra GitHub kaynak sürümünü yayımlar; sunucuya dağıtım yapılmaz.
 
