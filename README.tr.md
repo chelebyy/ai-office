@@ -8,6 +8,10 @@ AI Office, bilgisayarındaki **OpenAI Codex** oturumlarını masaüstü tarayıc
 
 [![CI](https://github.com/chelebyy/ai-office/actions/workflows/ci.yml/badge.svg)](https://github.com/chelebyy/ai-office/actions/workflows/ci.yml)
 
+![AI Office: sanal ofis, dört ekip üyesi, canlı etkinlik akışı ve proje odaları](docs/images/ai-office-preview.webp)
+
+*Örnek oturumlarla masaüstü arayüzü. Görselde özel konuşma veya gerçek proje verisi bulunmaz.*
+
 ## Ne işe yarar?
 
 Birden fazla projede Codex ile çalışırken sürekli konuşmalar arasında dolaşmadan hangi oturumun çalıştığını, hangisinin yanıtını beklediğini ve en son ne yaptığını görmeni sağlar.

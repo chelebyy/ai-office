@@ -8,6 +8,10 @@ AI Office turns local **OpenAI Codex** session activity into a fixed-camera offi
 
 [![CI](https://github.com/chelebyy/ai-office/actions/workflows/ci.yml/badge.svg)](https://github.com/chelebyy/ai-office/actions/workflows/ci.yml)
 
+![AI Office showing a virtual office, four team members, live activity and project rooms](docs/images/ai-office-preview.webp)
+
+*The desktop interface with synthetic demo sessions. No private conversations or project data are shown.*
+
 ## What is it useful for?
 
 - **Follow several projects at once.** Browse projects and their sessions, switch rooms, and keep the selected room visible after its work finishes.
