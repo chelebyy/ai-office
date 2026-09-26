@@ -68,6 +68,27 @@ function answer(r: RecordReducer, index: number, callId = 'q1') {
   );
 }
 
+test('context envelopes alone retain questions but a following user answer retires async cards', () => {
+  const r = reducer();
+  ask(r);
+  const context = '<environment_context><cwd>example</cwd></environment_context>\n<app-context>context</app-context>';
+  r.accept(event('user_message', { message: context }), NOW);
+  assert.equal(r.session!.pendingQuestions!.length, 2);
+  r.accept(event('user_message', { message: context + '\nContinue with option A.' }), NOW);
+  assert.equal(r.session!.pendingQuestions!.length, 0);
+});
+
+test('long assistant history retains complete newest messages within a text budget', () => {
+  const r = reducer();
+  for (let i = 0; i < 120; i++)
+    r.accept(event('agent_message', { phase: 'commentary', message: String(i).padStart(3, '0') + 'x'.repeat(7900) }), NOW);
+  const events = r.session!.events;
+  assert.ok(events.reduce((sum, event) => sum + (event.text?.length ?? 0), 0) <= 16_000);
+  assert.ok(events.at(-1)!.text!.startsWith('119'));
+  assert.equal(events.at(-1)!.text!.length, 7903);
+  assert.equal(r.session!.counts.messages, 120);
+});
+
 test('async question turns Cheleby toward viewer without falsifying background execution', () => {
   const r = reducer();
   ask(r);

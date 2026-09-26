@@ -28,3 +28,11 @@ prioritized on the next scan; the file-read cap is never exceeded.
 Startup may replace an absent persisted room with an available room. A room
 selected during the current visit is never silently replaced by another
 project when its data disappears. Ambient pets remain intentionally disabled.
+
+Historical discovery retains an in-memory metadata catalog and visits at most
+128 archive directory entries per poll. Recent-date file metadata rotates in
+batches of 128; tracked files are refreshed on every poll. Filesystem metadata
+checks share a 16-worker cap. A large archive can therefore take multiple polls
+to discover an old resumed session or its parent. Stopping closes the archive
+cursor. Recent assistant-message text is capped at 16,000 characters per retained
+session, alongside the 120-event cap; counters still reflect all records read.

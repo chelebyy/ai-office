@@ -326,6 +326,14 @@ export class RecordReducer {
       ...extra,
     });
     if (session.events.length > 120) session.events.shift();
+    // Retain complete recent messages within a per-session text budget. With the
+    // reader's 2*maxFiles retention cap this also bounds aggregate message text.
+    let retainedText = 0;
+    for (let index = session.events.length - 1; index >= 0; index--) {
+      const event = session.events[index]!;
+      retainedText += event.text?.length ?? 0;
+      if (event.text && retainedText > 16_000) session.events.splice(index, 1);
+    }
     session.lastEventAt = occurredAt;
     session.lastObservedAt = observedAt;
     return true;

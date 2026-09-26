@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import type { ObserverSnapshot, SessionView } from '../src/shared/contract.ts';
-import { roomFeed } from '../src/web/fixed-office/room-feed.ts';
+import { roomFeed, roomQuestionSession } from '../src/web/fixed-office/room-feed.ts';
 import {
   fixedOfficeState,
   restoredRoomId,
@@ -24,6 +24,18 @@ import {
   screenSlices,
 } from '../src/web/fixed-office/scene-layout.ts';
 const now = Date.parse('2026-09-12T15:00:00Z');
+test('question cards follow selected associated team members and exclude unrelated questions', () => {
+  const question = { id: 'q:0', callId: 'q', index: 0, title: 'Choose', options: ['A', 'B'], asynchronous: true };
+  const main = session('main');
+  const child = session('child', { agentKind: 'subagent', parentResolved: true, rootId: 'main', pendingQuestions: [question] });
+  const other = session('other', { pendingQuestions: [question] });
+  assert.equal(roomQuestionSession(main, [main, child, other], child.id), child);
+  assert.equal(roomQuestionSession(main, [main, child, other], main.id), child);
+  assert.equal(roomQuestionSession(main, [other], other.id), undefined);
+  main.pendingQuestions = [question];
+  assert.equal(roomQuestionSession(main, [child], child.id), child);
+  assert.equal(roomQuestionSession(main, [child], main.id), main);
+});
 function session(id: string, extra: Partial<SessionView> = {}): SessionView {
   return {
     id,

@@ -1,5 +1,12 @@
 import type { SessionView } from '../../shared/contract.ts';
 
+export function roomQuestionSession(root: SessionView | undefined, members: SessionView[], activeId?: string) {
+  if (!root) return undefined;
+  const team = [root, ...members.filter(member => member.agentKind === 'subagent' && member.parentResolved && member.rootId === root.id)];
+  return team.find(member => member.id === activeId && member.pendingQuestions?.length)
+    ?? team.find(member => member.pendingQuestions?.length);
+}
+
 /** Keep event receipts, question state and identity scoped to their originating session. */
 export function roomFeed(root: SessionView | undefined, members: SessionView[] = []) {
   if (!root) return [];

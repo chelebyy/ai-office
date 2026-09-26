@@ -19,5 +19,9 @@ test('repository guard sees personal paths in binary metadata and accepts docume
     'personal absolute path',
   ]);
   assert.deepEqual(inspectFile('README.md', Buffer.from('/mnt/c/Users/<windows-user>/.codex')), []);
+  for (const parts of [['', 'mnt', 'c', 'Users', 'alice', 'project'], ['', 'Users', 'alice', 'project']]) {
+    assert.deepEqual(inspectFile('image.png', Buffer.from('\0tEXt\0' + parts.join('/'))), ['personal absolute path']);
+  }
+  assert.deepEqual(inspectFile('README.md', Buffer.from('/Users/<user>/project')), []);
   assert.deepEqual(inspectFile('src/config.ts', Buffer.from('process.env.AI_OFFICE_PORT')), []);
 });

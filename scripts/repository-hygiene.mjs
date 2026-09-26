@@ -7,7 +7,7 @@ const privateFiles =
   /^(?:\.claude\/|\.local\/|\.serena\/|\.playwright-mcp\/|assets\/|CODEBASE\.md$|design-review-|docs\/.*2026|docs\/CHELEBY_HOME_|docs\/README_DEVELOPMENT_HISTORY)/;
 const credentialFiles = /(?:^|\/)(?:\.env(?:\..+)?|id_rsa|id_ed25519)$|\.(?:pem|p12|pfx|key)$/i;
 const personalPath =
-  /[A-Z]:[\\/]+(?:Users[\\/]+(?!<)[^\\/\s"'<>]+|All_Project[\\/])|\/home\/(?!<)[a-z0-9_.-]+\//i;
+  /[A-Z]:[\\/]+(?:Users[\\/]+(?!<)[^\\/\s"'<>]+|All_Project[\\/])|\/(?:home|Users|mnt\/[a-z]\/Users)\/(?!<)[a-z0-9_.-]+\//i;
 const credential =
   /gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,}|sk-(?:proj-|ant-)?[A-Za-z0-9_-]{24,}|AKIA[A-Z0-9]{16}|-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/;
 

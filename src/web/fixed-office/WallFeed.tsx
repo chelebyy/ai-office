@@ -265,7 +265,7 @@ export function QuestionCard({
       {questions.length > 0 && (
         <aside
           className="fo-question-card"
-          aria-label={tr ? 'Cheleby’nin sorusu' : 'Cheleby’s question'}
+          aria-label={tr ? `${title}: soru` : `${title}: question`}
           data-testid="question-card"
         >
           <div className="fo-question-heading">

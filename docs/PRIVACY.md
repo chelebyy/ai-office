@@ -20,6 +20,7 @@ Runtime artwork lives under `src/web/public`. Automated checks reject
 personal path patterns, common credential formats and private artifact paths
 in tracked files. They are a guardrail, not an exhaustive security audit.
 
-Earlier commits may still contain historical paths and development evidence.
-Cleaning the current tree does not erase Git history, existing clones,
-forks or caches. No history rewrite is implied by this cleanup.
+Published branch histories were rewritten to remove retired private development
+files and personal commit email addresses. Existing clones, private backups,
+forks and cached commit/PR views may still retain earlier data. Server-side cache
+removal has been requested from GitHub Support and is not yet confirmed.

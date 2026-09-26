@@ -5,7 +5,7 @@ import os from 'node:os';
 import { ioDeadline } from './io-deadline.ts';
 import { RecordReducer } from './parser.ts';
 import { SessionTitles } from './session-titles.ts';
-import { discoverRollouts, type RolloutCandidate } from './rollout-discovery.ts';
+import { RolloutDiscovery, type RolloutCandidate } from './rollout-catalog.ts';
 import { SCHEMA_VERSION } from '../shared/contract.ts';
 import type { ObserverSnapshot, SessionView } from '../shared/contract.ts';
 
@@ -40,6 +40,7 @@ export class CodexObserver extends EventEmitter {
   private files = new Map<string, FileState>();
   private retryAfter = new Map<string, number>();
   private familyPriority = new Set<string>();
+  private discovery = new RolloutDiscovery();
   private titles: SessionTitles;
   private timer: ReturnType<typeof setTimeout> | null = null;
   private stopped = true;
@@ -81,6 +82,7 @@ export class CodexObserver extends EventEmitter {
     this.stopped = true;
     if (this.timer) clearTimeout(this.timer);
     await this.inFlight;
+    await this.discovery.close();
   }
 
   scanOnce(): Promise<void> {
@@ -145,7 +147,7 @@ export class CodexObserver extends EventEmitter {
         datePaths.add(path.join(root, ...date.toISOString().slice(0,10).split('-')));
         datePaths.add(path.join(root, String(date.getFullYear()), String(date.getMonth() + 1).padStart(2,'0'), String(date.getDate()).padStart(2,'0')));
       }
-      const discovery = await discoverRollouts(root, datePaths, new Set(this.files.keys()), Date.parse(checkedAt));
+      const discovery = await this.discovery.discover(root, datePaths, new Set(this.files.keys()), Date.parse(checkedAt));
       this.scan.readErrors += discovery.errors;
       this.scan.discoveryFiles = discovery.catalog.length;
       this.scan.reactivatedFiles = discovery.reactivated;

@@ -64,6 +64,7 @@ export function isQuestionFollowup(message: string): boolean {
     .split(/^## My request:\s*$/m)
     .at(-1)!
     .replace(/<in-app-browser-context\b[^>]*>[\s\S]*?<\/in-app-browser-context>/gi, '')
+    .replace(/<(environment_context|app-context|permissions_instructions|collaboration_mode)\b[^>]*>[\s\S]*?<\/\1>/gi, '')
     .trim();
   // Structured replies are handled by ID, including partial/malformed envelopes.
   // Context and attachment headers alone are not a new user instruction.

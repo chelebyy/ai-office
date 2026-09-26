@@ -1,6 +1,7 @@
 import { useEffect, useId, useState, type CSSProperties } from 'react';
 import type { SessionView, Locale } from '../../shared/contract.ts';
 import { WallFeed, QuestionCard } from './WallFeed.tsx';
+import { roomQuestionSession } from './room-feed.ts';
 import { OfficeWindow, useOfficeWindow } from './NightWindow.tsx';
 import type { OfficeTheme } from './office-theme.ts';
 import type { OfficeLocation } from './office-environment.ts';
@@ -110,6 +111,7 @@ export default function OfficeArtwork(props: ArtworkProps) {
     };
   }, [retry]);
   const { actors, copy, locale, labels, screens, showCharacters } = props;
+  const questionSession = roomQuestionSession(actors.main, props.members, props.activeId);
   const screenEnvironment = useScreenEnvironment(Object.values(actors), props.now);
   const screensFrozen =
     props.paused ||
@@ -423,9 +425,9 @@ export default function OfficeArtwork(props: ArtworkProps) {
         </div>
       )}
       <QuestionCard
-        session={actors.main}
+        session={questionSession}
         locale={locale}
-        current={freshness(actors.main, props.connection, props.paused, props.now) === 'current'}
+        current={freshness(questionSession, props.connection, props.paused, props.now) === 'current'}
       />
       {characters.map((c) => {
         const session = actors[c.id];

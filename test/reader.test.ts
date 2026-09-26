@@ -4,9 +4,39 @@ import { appendFile, mkdir, rename, unlink, utimes, writeFile } from 'node:fs/pr
 import path from 'node:path';
 import fs from 'node:fs';
 import { syncBuiltinESMExports } from 'node:module';
-import { discoverRollouts } from '../src/observer/rollout-discovery.ts';
+import { discoverRollouts, RolloutDiscovery } from '../src/observer/rollout-catalog.ts';
 import { CodexObserver } from '../src/observer/reader.ts';
 import { event, jsonl, metadata, NOW, row, temporarySource } from './helpers.ts';
+
+test('large archive discovery is incremental while tracked and recent files stay responsive', async t => {
+  const source = await temporarySource(); t.after(() => source.cleanup());
+  const root = path.join(source.root, 'sessions');
+  const old = path.join(root, '2025', '01', '01');
+  await mkdir(old, { recursive: true });
+  await Promise.all(Array.from({ length: 400 }, (_, i) => writeFile(path.join(old, `rollout-${i}.jsonl`), '')));
+  const live = await source.record('live', '');
+  const discovery = new RolloutDiscovery(); t.after(() => discovery.close());
+  const original = fs.promises.stat;
+  let checked = 0;
+  fs.promises.stat = ((...args: Parameters<typeof fs.promises.stat>) => { checked++; return Reflect.apply(original, fs.promises, args); }) as typeof fs.promises.stat;
+  syncBuiltinESMExports();
+  try {
+    const first = await discovery.discover(root, new Set([path.dirname(live)]), new Set([live]), Date.now());
+    assert.ok(checked <= 129);
+    assert.ok(first.catalog.length < 401);
+    assert.ok(first.candidates.some(file => file.filename === live));
+    let result = first;
+    for (let i = 0; i < 5; i++) {
+      checked = 0;
+      result = await discovery.discover(root, new Set([path.dirname(live)]), new Set([live]), Date.now());
+      assert.ok(checked <= 129);
+    }
+    assert.equal(result.catalog.length, 401);
+    await unlink(live);
+    result = await discovery.discover(root, new Set(), new Set([live]), Date.now());
+    assert.ok(!result.catalog.some(file => file.filename === live));
+  } finally { fs.promises.stat = original; syncBuiltinESMExports(); }
+});
 
 test('archive metadata overlaps across date folders while keeping the global I/O cap', async t => {
   const source = await temporarySource(); t.after(() => source.cleanup());

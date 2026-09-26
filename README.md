@@ -113,7 +113,7 @@ npm start
 - The observer reads local records and does not send commands to Codex. The web server binds to `127.0.0.1` with local cookie/origin checks.
 - Session data stays in the local observer/browser flow. Optional city search and weather use Open-Meteo: those requests include the search query or selected coordinates, not session records.
 - Raw user messages, internal reasoning and full tool inputs/outputs are not forwarded to the browser. Visible questions, assistant messages and bounded activity previews may still contain private information. Redaction is not complete anonymization; review the display before sharing screenshots.
-- Counters cover the records actually read. Large files initially use metadata plus a bounded tail; each session retains up to 120 recent events. History is reconstructed after restart, not stored in a separate persistent database.
+- Counters cover the records actually read. Large files initially use metadata plus a bounded tail; each session retains up to 120 recent events and 16,000 characters of recent assistant text. Historical discovery is incremental, so large archives may need several polls to discover an old resumed session. History is reconstructed after restart, not stored in a separate persistent database.
 - A completed turn does not mean a closed session. The application does not infer cost, test success, percentage completion or the model's internal reasoning.
 - Codex record formats can change. Other LLM integrations, macOS and all Linux distributions are not claimed as supported.
 
