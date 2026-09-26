@@ -177,6 +177,12 @@ export class CodexObserver extends EventEmitter {
           : discovery.catalog.find(file => path.basename(file.filename).endsWith('-' + parentId + '.jsonl'));
         // Explicit parent dependencies take priority over unrelated recent history, within the same cap.
         if (parent) {
+          if (cachedParent && cachedParent[1].mtime === parent.mtime) {
+            // Discovery already confirmed this unchanged parent's presence.
+            // Reusing it keeps the resolved room stable without spending another read.
+            cachedParent[1].present = true;
+            return;
+          }
           if (!attempted.has(parent.filename) && attempted.size >= this.maxFiles) {
             // The dependency was unknown before reading this child. Promote the
             // family on the next scan instead of exceeding the strict I/O cap

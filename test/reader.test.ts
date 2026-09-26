@@ -168,6 +168,11 @@ test('a family discovered at the budget boundary is promoted next scan without e
   assert.equal(next.sessions.find(s => s.id === 'child')?.parentResolved, true);
   assert.equal(next.sessions.find(s => s.id === 'parent')?.recordAvailable, true);
   assert.equal(next.sessions.find(s => s.id === 'child')?.recordAvailable, true);
+  await observer.scanOnce();
+  const stable = observer.snapshot();
+  assert.equal(stable.scan.files, 2);
+  assert.equal(stable.sessions.find(s => s.id === 'parent')?.recordAvailable, true);
+  assert.equal(stable.sessions.find(s => s.id === 'child')?.parentResolved, true);
 });
 
 test('file modification time discovers candidates but never fabricates working status', async t => {

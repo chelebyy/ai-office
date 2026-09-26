@@ -159,6 +159,7 @@ export function WallFeed({
             ) : e.kind === 'turn_completed' || e.kind === 'turn_aborted' ? (
               <div className="fo-feed-end">
                 <span>{e.kind === 'turn_completed' ? '✓' : '■'}</span>
+                {author(e.session)} ·{' '}
                 {e.kind === 'turn_completed'
                   ? tr
                     ? 'Yanıt tamamlandı'
