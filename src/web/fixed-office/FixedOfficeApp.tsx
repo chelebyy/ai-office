@@ -53,6 +53,20 @@ export default function FixedOfficeApp() {
     () => new URLSearchParams(window.location.search).get('robotMotion') === 'preview',
   );
   const [mobilePanel, setMobilePanel] = useState<'feed' | 'agents'>('feed');
+  const [wideWorkspace, setWideWorkspace] = useState(false);
+  const workspaceRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const workspace = workspaceRef.current;
+    if (!workspace) return;
+    const observer = new ResizeObserver(([entry]) => {
+      if (!entry) return;
+      const { width, height } = entry.contentRect;
+      // Measure the space after navigation, reserving the toolbar and a readable feed.
+      setWideWorkspace(width >= 1100 && height > 56 && width / (height - 56) >= 1.6);
+    });
+    observer.observe(workspace);
+    return () => observer.disconnect();
+  }, []);
   const teamRef = useRef<HTMLElement>(null);
   const [now, setNow] = useState(() => Date.now());
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -274,7 +288,12 @@ export default function FixedOfficeApp() {
           </button>
         </div>
       </aside>
-      <main className="fo-workspace" aria-label={copy.office}>
+      <main
+        className="fo-workspace"
+        ref={workspaceRef}
+        data-layout={wideWorkspace ? 'wide' : 'stacked'}
+        aria-label={copy.office}
+      >
         <header className="fo-workspace-toolbar">
           <button className="fo-room-picker" onClick={() => setDialog({ kind: 'sessions' })}>
             <Icon name="layers" />
